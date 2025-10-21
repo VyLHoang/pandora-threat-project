@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Pandora Admin Console - Dashboard{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>🔐 Welcome to Admin Console</h1>
+    <p>Restricted access - Server administrators only</p>
+    <p class="server-info">Port: 22002 | Bind: 127.0.0.1 (localhost only)</p>
+    
+    <div class="quick-links">
+        <a href="{{ url_for('traffic_page') }}" class="card">
+            <h2>📊 Traffic Monitor</h2>
+            <p>Real-time monitoring of all services and requests</p>
+            <div class="card-stats">
+                <span>Total Events: {{ stats.total_events }}</span>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('attacks_page') }}" class="card">
+            <h2>🛡️ IDS Dashboard</h2>
+            <p>Intrusion detection and security events</p>
+            <div class="card-stats">
+                <span>Recent Attacks: {{ stats.recent_attacks }}</span>
+            </div>
+        </a>
+
+        <a href="{{ url_for('honeypot_page') }}" class="card">
+            <h2>🕸️ Honeypot Monitor</h2>
+            <p>Track all activities on port 443 webserver</p>
+            <div class="card-stats">
+                <span>Activities: {{ stats.honeypot_activities }}</span>
+            </div>
+        </a>
+
+        <a href="{{ url_for('users_page') }}" class="card">
+            <h2>👥 User Monitoring</h2>
+            <p>Monitor user activity and scan patterns (READ-ONLY)</p>
+            <div class="card-stats">
+                <span>Total Users: {{ stats.total_users }}</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="system-status">
+        <h3>System Status</h3>
+        <ul>
+            <li>✅ Central Monitor: Running (Port 22002)</li>
+            <li>✅ Backend API: Running (Port 8000)</li>
+            <li>✅ Database: Connected (PostgreSQL)</li>
+            <li>✅ IDS Engine: Active</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+

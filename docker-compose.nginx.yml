@@ -1,0 +1,25 @@
+# Pandora Platform - Nginx Proxy for Development
+# This runs only Nginx in Docker, proxying to services running on host
+
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: pandora_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - pandora-net
+
+networks:
+  pandora-net:
+    driver: bridge
+

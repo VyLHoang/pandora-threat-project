@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Traffic Monitor - Pandora Admin{% endblock %}
+
+{% block content %}
+<div class="monitor-header">
+    <div class="header-left">
+        <h1>📊 Traffic Monitor</h1>
+        <p>Real-time monitoring of all services</p>
+    </div>
+    <div class="header-right">
+        <div class="last-update">Last Update: {{ current_time }}</div>
+        <form method="GET" style="display: inline;">
+            <button type="submit" class="btn-refresh">🔄 Refresh Now</button>
+        </form>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_events }}</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.services_count }}</div>
+            <div class="stat-label">Active Services</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🔌</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.ports_count }}</div>
+            <div class="stat-label">Monitored Ports</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ logs|length }}</div>
+            <div class="stat-label">Recent Logs</div>
+        </div>
+    </div>
+</div>
+
+<!-- Traffic Logs Table -->
+<div class="logs-section">
+    <h3>📋 Recent Traffic Logs</h3>
+    
+    {% if logs %}
+    <div class="table-container">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Service</th>
+                    <th>Method</th>
+                    <th>Path</th>
+                    <th>Status</th>
+                    <th>Port</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="timestamp">{{ log.timestamp }}</td>
+                    <td class="service">{{ log.service }}</td>
+                    <td class="method method-{{ log.method|lower }}">{{ log.method }}</td>
+                    <td class="path" title="{{ log.path }}">
+                        {% if log.path|length > 50 %}
+                            {{ log.path[:50] }}...
+                        {% else %}
+                            {{ log.path }}
+                        {% endif %}
+                    </td>
+                    <td class="status status-{{ log.status_code // 100 }}xx">{{ log.status_code }}</td>
+                    <td class="port">{{ log.port }}</td>
+                    <td class="ip">{{ log.ip_address or 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <p>No traffic logs available. Waiting for incoming requests...</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Services Breakdown -->
+<div class="services-section">
+    <h3>🔧 Services Breakdown</h3>
+    <div class="services-grid">
+        {% for service, count in stats.services.items() %}
+        <div class="service-card">
+            <div class="service-name">{{ service }}</div>
+            <div class="service-count">{{ count }} requests</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

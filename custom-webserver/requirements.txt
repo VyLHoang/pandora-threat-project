@@ -1,0 +1,15 @@
+# Pandora Custom Webserver Requirements
+# No external dependencies needed - uses Python standard library only
+
+# Python 3.8+ required
+# Built-in modules used:
+# - http.server
+# - ssl
+# - json
+# - datetime
+# - urllib.parse
+# - mimetypes
+
+# Optional: For development
+# None required
+

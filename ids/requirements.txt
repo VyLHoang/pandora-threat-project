@@ -1,0 +1,7 @@
+scapy==2.5.0
+psycopg[binary]==3.2.10
+sqlalchemy==2.0.40
+geoip2==4.7.0
+python-dotenv==1.0.0
+elasticsearch==8.11.0
+

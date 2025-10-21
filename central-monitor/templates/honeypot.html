@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Honeypot Monitor - Pandora Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='honeypot.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="monitor-header">
+    <div class="header-left">
+        <h1>🕸️ Honeypot Monitor</h1>
+        <p>Real-time activity tracking on port 443</p>
+    </div>
+    <div class="header-right">
+        <div class="last-update">Last Update: {{ current_time }}</div>
+        <form method="GET" style="display: inline;">
+            <button type="submit" class="btn-refresh">🔄 Refresh Now</button>
+        </form>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="honeypot-controls">
+    <form method="GET" action="{{ url_for('honeypot_page') }}">
+        <div class="control-group">
+            <label for="activity_type">Activity Type:</label>
+            <select name="activity_type" id="activity_type" onchange="this.form.submit()">
+                <option value="">All Activities</option>
+                <option value="scan" {% if request.args.get('activity_type') == 'scan' %}selected{% endif %}>Scanner Activity</option>
+                <option value="login_attempt" {% if request.args.get('activity_type') == 'login_attempt' %}selected{% endif %}>Login Attempts</option>
+                <option value="failed_login" {% if request.args.get('activity_type') == 'failed_login' %}selected{% endif %}>Failed Logins</option>
+                <option value="page_view" {% if request.args.get('activity_type') == 'page_view' %}selected{% endif %}>Page Views</option>
+                <option value="api_call" {% if request.args.get('activity_type') == 'api_call' %}selected{% endif %}>API Calls</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="user_filter">User Status:</label>
+            <select name="user_filter" id="user_filter" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                <option value="authenticated" {% if request.args.get('user_filter') == 'authenticated' %}selected{% endif %}>Authenticated</option>
+                <option value="anonymous" {% if request.args.get('user_filter') == 'anonymous' %}selected{% endif %}>Anonymous</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="suspicious_only">Suspicious:</label>
+            <select name="suspicious_only" id="suspicious_only" onchange="this.form.submit()">
+                <option value="">All Activities</option>
+                <option value="true" {% if request.args.get('suspicious_only') == 'true' %}selected{% endif %}>Suspicious Only</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="limit">Show:</label>
+            <select name="limit" id="limit" onchange="this.form.submit()">
+                <option value="20" {% if request.args.get('limit', '20') == '20' %}selected{% endif %}>20 logs</option>
+                <option value="50" {% if request.args.get('limit') == '50' %}selected{% endif %}>50 logs</option>
+                <option value="100" {% if request.args.get('limit') == '100' %}selected{% endif %}>100 logs</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-apply">Apply</button>
+        <a href="{{ url_for('honeypot_page') }}" class="btn-clear">Clear</a>
+    </form>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_logs }}</div>
+            <div class="stat-label">Total Activities</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.unique_ips }}</div>
+            <div class="stat-label">Unique IPs</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🔐</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.authenticated_users }}</div>
+            <div class="stat-label">Authenticated</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🚫</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.anonymous_users }}</div>
+            <div class="stat-label">Anonymous</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.suspicious_activities }}</div>
+            <div class="stat-label">Suspicious</div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Breakdown -->
+<div class="activity-breakdown">
+    <h3>📈 Activity Types Breakdown</h3>
+    <div class="activity-types-grid">
+        {% for activity_type, count in stats.top_activities.items() %}
+        <div class="activity-type-card">
+            <div class="activity-type-name">{{ activity_type|replace('_', ' ')|title }}</div>
+            <div class="activity-type-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Activity Log Table -->
+<div class="activity-log-section">
+    <h3>📋 Recent Activity Log ({{ logs|length }} of {{ stats.total_logs }})</h3>
+    
+    {% if logs %}
+    <div class="activity-table-container">
+        <table id="activity-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>IP Address</th>
+                    <th>Location</th>
+                    <th>User Status</th>
+                    <th>Activity</th>
+                    <th>Request</th>
+                    <th>Risk Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr class="{% if log.suspicious_score >= 70 %}suspicious-row{% endif %}">
+                    <td class="timestamp">{{ (log.timestamp + timedelta(hours=7)).strftime('%m/%d/%Y, %H:%M:%S') }}</td>
+                    <td class="ip-address">
+                        <div>{{ log.ip_address }}</div>
+                        {% if log.scan_target %}
+                        <small class="scan-info">Scanned: {{ log.scan_target }}</small>
+                        {% endif %}
+                        {% if log.scan_hash %}
+                        <small class="scan-info">Hash: {{ log.scan_hash[:16] }}...</small>
+                        {% endif %}
+                    </td>
+                    <td class="location">{{ log.geoip_city or 'Unknown' }}, {{ log.geoip_country or 'Unknown' }}</td>
+                    <td class="user-status-cell">
+                        {% if log.is_authenticated %}
+                        <span class="user-status authenticated">🔐 User {{ log.user_id or '' }}</span>
+                        {% else %}
+                        <span class="user-status anonymous">👤 Anonymous</span>
+                        {% endif %}
+                    </td>
+                    <td class="activity-type">
+                        <span class="activity-badge {{ log.activity_type }}">{{ log.activity_type|replace('_', ' ')|upper }}</span>
+                    </td>
+                    <td class="request-path" title="{{ log.request_path }}">
+                        {{ log.request_method }} 
+                        {% if log.request_path|length > 30 %}
+                            {{ log.request_path[:30] }}...
+                        {% else %}
+                            {{ log.request_path }}
+                        {% endif %}
+                    </td>
+                    <td class="risk-score">
+                        {% if log.suspicious_score >= 70 %}
+                        <span class="risk-badge high">HIGH ({{ log.suspicious_score }})</span>
+                        {% elif log.suspicious_score >= 40 %}
+                        <span class="risk-badge medium">MEDIUM ({{ log.suspicious_score }})</span>
+                        {% else %}
+                        <span class="risk-badge low">LOW ({{ log.suspicious_score }})</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <p>No activity data found with current filters.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Top Suspicious IPs -->
+{% if stats.top_suspicious_ips %}
+<div class="suspicious-ips-section">
+    <h3>🎯 Top Suspicious IPs</h3>
+    <div class="suspicious-ips-grid">
+        {% for ip_data in stats.top_suspicious_ips %}
+        <div class="suspicious-ip-card">
+            <div class="ip-address">{{ ip_data.ip }}</div>
+            <div class="ip-stats">
+                <span>Activities: {{ ip_data.activity_count }}</span>
+                <span class="risk-score">Risk: {{ ip_data.max_suspicious_score }}</span>
+            </div>
+            <div class="ip-last-seen">Last seen: {{ ip_data.last_seen[:19] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

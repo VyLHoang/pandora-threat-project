@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Pandora Central Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background pattern */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 193, 7, 0.03) 10px,
+                    rgba(255, 193, 7, 0.03) 20px
+                );
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(40px); }
+        }
+
+        .login-container {
+            background: #000000;
+            border: 3px solid #ffc107;
+            border-radius: 15px;
+            box-shadow: 
+                0 0 40px rgba(255, 193, 7, 0.3),
+                0 14px 28px rgba(0,0,0,0.5),
+                inset 0 0 100px rgba(255, 193, 7, 0.05);
+            padding: 50px 40px;
+            width: 450px;
+            max-width: 90%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-header .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
+        }
+
+        .login-header h1 {
+            color: #ffc107;
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+
+        .login-header p {
+            color: #ffffff;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .security-badge {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #000000;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .security-badge strong {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .security-badge span {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ffc107;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #1a1a1a;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: #000000;
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: #666;
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .alert-error {
+            background-color: #ffc107;
+            border: 2px solid #ffb300;
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.6);
+            background: linear-gradient(135deg, #ffd54f 0%, #ffc107 100%);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        .login-footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .login-footer p {
+            margin-bottom: 5px;
+        }
+
+        .restricted-notice {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 25px;
+            text-align: center;
+            font-size: 12px;
+            color: #ffc107;
+        }
+
+        .restricted-notice strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        /* Glowing corners effect */
+        .login-container::before,
+        .login-container::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffc107;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
+        }
+
+        .login-container::before {
+            top: -10px;
+            left: -10px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .login-container::after {
+            bottom: -10px;
+            right: -10px;
+            border-left: none;
+            border-top: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="icon">🔐</div>
+            <h1>Admin Console</h1>
+            <p>Pandora Central Monitor</p>
+        </div>
+
+        <div class="security-badge">
+            <strong>🛡️ SECURE ACCESS ONLY</strong><br>
+            <span>Port 22002 | Server-Side Auth</span>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            ❌ {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label for="username">👤 Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    placeholder="Enter admin username"
+                    required 
+                    autofocus
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔑 Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="Enter password"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-login">
+                🚀 Login to Dashboard
+            </button>
+        </form>
+
+        <div class="restricted-notice">
+            <strong>⚠️ ADMINISTRATOR ACCESS ONLY</strong>
+            This console is restricted to authorized personnel
+        </div>
+
+        <div class="login-footer">
+            <p>Pandora Threat Intelligence Platform v1.0</p>
+            <p>Server-Side Rendered | No JavaScript Required</p>
+        </div>
+    </div>
+</body>
+</html>

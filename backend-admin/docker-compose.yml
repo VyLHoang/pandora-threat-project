@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres-admin:
+    image: postgres:15-alpine
+    container_name: pandora_postgres_admin
+    environment:
+      POSTGRES_DB: pandora_admin_db
+      POSTGRES_USER: pandora_admin
+      POSTGRES_PASSWORD: pandora_admin_pass_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5434:5432"  # Port 5434 cho Admin Database
+    volumes:
+      - postgres_admin_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandora_admin -d pandora_admin_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pandora-admin-network
+
+  redis-admin:
+    image: redis:7-alpine
+    container_name: pandora_redis_admin
+    ports:
+      - "6381:6379"  # Port 6381 cho Admin Redis
+    volumes:
+      - redis_admin_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pandora-admin-network
+
+volumes:
+  postgres_admin_data:
+    driver: local
+  redis_admin_data:
+    driver: local
+
+networks:
+  pandora-admin-network:
+    driver: bridge
+

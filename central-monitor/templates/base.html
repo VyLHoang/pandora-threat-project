@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="30">
+    <title>{% block title %}Pandora Admin Console{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>⚙️ PANDORA ADMIN CONSOLE</h1>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}" class="nav-btn">🏠 Dashboard</a>
+            <a href="{{ url_for('traffic_page') }}" class="nav-btn">📊 Traffic Monitor</a>
+            <a href="{{ url_for('attacks_page') }}" class="nav-btn">🛡️ IDS Attacks</a>
+            <a href="{{ url_for('honeypot_page') }}" class="nav-btn">🕸️ Honeypot</a>
+            <a href="{{ url_for('users_page') }}" class="nav-btn">👥 User Monitoring</a>
+            <a href="{{ url_for('logout') }}" class="nav-btn logout-btn">🚪 Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="auto-refresh-notice">
+        <small>🔄 Auto-refresh every 30 seconds | Last updated: {{ current_time }}</small>
+    </div>
+</body>
+</html>
+

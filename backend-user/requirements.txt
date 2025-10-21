@@ -1,0 +1,45 @@
+# FastAPI Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17
+
+# Database
+sqlalchemy==2.0.40
+psycopg[binary]==3.2.10
+alembic==1.14.0
+
+# Redis
+redis==5.2.1
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+
+# API Clients
+requests==2.32.3
+httpx==0.28.1
+
+# GeoIP
+geoip2==4.8.1
+maxminddb==2.6.2
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Validation
+pydantic==2.10.5
+pydantic-settings==2.7.1
+email-validator==2.2.0
+
+# Utilities
+python-dateutil==2.9.0
+pytz==2024.2
+
+# Development
+pytest==8.3.4
+pytest-asyncio==0.24.0
+faker==30.8.2
+
+# WHOIS
+python-whois==0.9.4

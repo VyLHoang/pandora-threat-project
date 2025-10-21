@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: pandora_postgres_user
+    environment:
+      POSTGRES_DB: pandora_user_db
+      POSTGRES_USER: pandora_user
+      POSTGRES_PASSWORD: pandora_user_pass_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5433:5432"  # Port 5433 cho User Database
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandora_user -d pandora_user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pandora-user-network
+
+  redis-user:
+    image: redis:7-alpine
+    container_name: pandora_redis_user
+    ports:
+      - "6380:6379"  # Port 6380 cho User Redis
+    volumes:
+      - redis_user_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pandora-user-network
+
+volumes:
+  postgres_user_data:
+    driver: local
+  redis_user_data:
+    driver: local
+
+networks:
+  pandora-user-network:
+    driver: bridge
+
