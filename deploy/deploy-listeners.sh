@@ -31,7 +31,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 echo -e "${GREEN}[1/8]${NC} Checking Python dependencies..."
-pip3 install -q requests psycopg2-binary redis elasticsearch || {
+pip3 install --break-system-packages -q requests psycopg2-binary redis elasticsearch || {
     echo -e "${RED}[ERROR]${NC} Failed to install Python dependencies"
     exit 1
 }

@@ -77,10 +77,10 @@ cd pandora-threat-project
 ### **3. Install Python Dependencies**
 
 ```bash
-pip3 install --upgrade pip
+pip3 install --break-system-packages --upgrade pip
 
 # All required packages
-pip3 install fastapi uvicorn sqlalchemy psycopg2-binary redis elasticsearch \
+pip3 install --break-system-packages fastapi uvicorn sqlalchemy psycopg2-binary redis elasticsearch \
     python-jose passlib bcrypt python-multipart aiofiles pydantic-settings \
     scapy geoip2 requests flask
 ```
