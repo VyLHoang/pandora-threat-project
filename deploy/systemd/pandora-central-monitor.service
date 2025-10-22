@@ -1,0 +1,30 @@
+[Unit]
+Description=Pandora Central Monitor - Admin Dashboard
+After=network.target network-online.target
+Wants=network-online.target
+Requires=pandora-backend-admin.service
+After=pandora-backend-admin.service
+
+[Service]
+Type=simple
+User=pandora
+Group=pandora
+WorkingDirectory=/home/pandora/projects/pandora-threat-project/central-monitor
+ExecStart=/usr/bin/python3 monitor_server.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment="PYTHONPATH=/home/pandora/projects/pandora-threat-project/central-monitor"
+Environment="PYTHONUNBUFFERED=1"
+Environment="FLASK_ENV=production"
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+

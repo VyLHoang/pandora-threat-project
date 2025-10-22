@@ -1,0 +1,30 @@
+[Unit]
+Description=Pandora IDS Engine - Network Intrusion Detection
+After=network.target network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service elasticsearch.service
+After=postgresql.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/pandora/projects/pandora-threat-project/ids
+ExecStart=/usr/bin/python3 ids_engine.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Network packet capture capabilities
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+NoNewPrivileges=true
+
+# Environment
+Environment="PYTHONPATH=/home/pandora/projects/pandora-threat-project/backend-admin"
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
+
