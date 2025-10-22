@@ -435,10 +435,10 @@ if __name__ == '__main__':
     print('  - Port 80/443 (HTTP/HTTPS)')
     print('  - IDS Engine (Network-wide)')
     print('='*70)
-    print('[ADMIN] Access restricted to 127.0.0.1 (localhost only)')
+    print('[ADMIN] Listening on all interfaces (0.0.0.0:27009)')
     print('[SECURITY] Pure server-side rendering - No client-side JavaScript')
     print('[REFRESH] Auto-refresh every 30 seconds (HTTP meta tag)')
     print('='*70)
     
-    app.run(host='127.0.0.1', port=27009, debug=False)
+    app.run(host='0.0.0.0', port=27009, debug=False)
 
