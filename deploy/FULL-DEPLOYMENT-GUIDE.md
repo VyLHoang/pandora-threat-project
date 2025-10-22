@@ -6,7 +6,7 @@
 
 ```bash
 # 1. SSH vào VPS
-ssh pandora@172.235.245.60 -p 2222
+ssh pandora@172.232.246.68 -p 2222
 
 # 2. Clone project (nếu chưa có)
 mkdir -p ~/projects
@@ -58,7 +58,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 # Logout and login again for docker group to take effect
 exit
-ssh pandora@172.235.245.60 -p 2222
+ssh pandora@172.232.246.68 -p 2222
 ```
 
 ---
@@ -116,7 +116,7 @@ cd ~/projects/pandora-threat-project/custom-webserver
 # Self-signed certificate
 openssl req -x509 -newkey rsa:4096 -nodes \
     -keyout server.key -out server.crt -days 365 \
-    -subj "/CN=172.235.245.60"
+    -subj "/CN=172.232.246.68"
 ```
 
 ---
@@ -165,7 +165,7 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
 # Allow monitoring (optional)
-sudo ufw allow 22002/tcp  # Central Monitor
+sudo ufw allow 27009/tcp  # Central Monitor
 sudo ufw allow 9000/tcp   # Backend Admin API
 sudo ufw allow 8000/tcp   # Backend User API
 sudo ufw allow 5601/tcp   # Kibana
@@ -213,7 +213,7 @@ sudo systemctl status pandora-https-443
 docker ps
 
 # Listening ports
-sudo netstat -tuln | grep -E '80|443|8000|9000|22002|5432|6379|9200|5601'
+sudo netstat -tuln | grep -E '80|443|8000|9000|27009|5432|6379|9200|5601'
 ```
 
 ---
@@ -226,11 +226,11 @@ curl http://localhost
 curl -k https://localhost
 curl http://localhost:9000/api/v1/health
 curl http://localhost:8000/api/v1/health
-curl http://localhost:22002
+curl http://localhost:27009
 
 # From your Windows machine
-curl http://172.235.245.60
-curl -k https://172.235.245.60
+curl http://172.232.246.68
+curl -k https://172.232.246.68
 ```
 
 ---
@@ -239,21 +239,21 @@ curl -k https://172.235.245.60
 
 From your Windows machine:
 
-1. **Main Website:** https://172.235.245.60
+1. **Main Website:** https://172.232.246.68
    - Accept self-signed certificate
    - Should show Vue.js frontend
 
-2. **Central Monitor:** http://172.235.245.60:22002
+2. **Central Monitor:** http://172.232.246.68:27009
    - Login: `admin` / `admin123`
    - Should show admin dashboard
 
-3. **Backend Admin API:** http://172.235.245.60:9000/docs
+3. **Backend Admin API:** http://172.232.246.68:9000/docs
    - Should show Swagger UI
 
-4. **Backend User API:** http://172.235.245.60:8000/docs
+4. **Backend User API:** http://172.232.246.68:8000/docs
    - Should show Swagger UI
 
-5. **Kibana:** http://172.235.245.60:5601
+5. **Kibana:** http://172.232.246.68:5601
    - Login: `elastic` / `pandora123`
    - Should show dashboards
 
@@ -278,7 +278,7 @@ IDS Engine ───[Monitor Network]───> PostgreSQL (Admin DB)
    ↓                                 Elasticsearch
    ↓
    ↓
-Central Monitor (22002) ──[Query]──> Backend Admin API (9000)
+Central Monitor (27009) ──[Query]──> Backend Admin API (9000)
    ↓                                      ↓
 Admin Dashboard                    PostgreSQL (Admin DB)
                                    Elasticsearch

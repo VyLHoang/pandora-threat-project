@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     ENTERPRISE_TIER_DAILY_LIMIT: int = 10000
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:22002"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:27009"
     
     # GeoIP
     GEOIP_DB_PATH: str = os.path.join(os.path.dirname(__file__), "GeoLite2-City.mmdb")
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@pandora.com"
     
     # Monitoring
-    CENTRAL_MONITOR_URL: str = "http://localhost:22002/api/logs"
+    CENTRAL_MONITOR_URL: str = "http://localhost:27009/api/logs"
     ENABLE_MONITORING: bool = True
     
     # Elasticsearch

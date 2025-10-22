@@ -42,7 +42,7 @@ if [ ! -f "$PROJECT_DIR/custom-webserver/server.crt" ] || [ ! -f "$PROJECT_DIR/c
     cd "$PROJECT_DIR/custom-webserver"
     openssl req -x509 -newkey rsa:4096 -nodes \
         -keyout server.key -out server.crt -days 365 \
-        -subj "/C=US/ST=State/L=City/O=Pandora/OU=Security/CN=172.235.245.60"
+        -subj "/C=US/ST=State/L=City/O=Pandora/OU=Security/CN=172.232.246.68"
     echo -e "${GREEN}[OK]${NC} Self-signed certificate generated"
 else
     echo -e "${GREEN}[OK]${NC} SSL certificates found"
@@ -99,8 +99,8 @@ echo "   HONEYPOT LISTENERS DEPLOYED"
 echo "=========================================================================="
 echo ""
 echo "Access from outside:"
-echo "  • HTTP:  http://172.235.245.60"
-echo "  • HTTPS: https://172.235.245.60"
+echo "  • HTTP:  http://172.232.246.68"
+echo "  • HTTPS: https://172.232.246.68"
 echo ""
 echo "Local test:"
 echo "  • curl http://localhost"

@@ -335,7 +335,7 @@ if command -v ufw &> /dev/null; then
     ufw --force enable
     ufw default deny incoming
     ufw default allow outgoing
-    ufw allow 22002/tcp comment 'SSH'
+    ufw allow 27009/tcp comment 'SSH'
     ufw allow 80/tcp comment 'HTTP Honeypot'
     ufw allow 443/tcp comment 'HTTPS Honeypot'
     ufw allow 27009/tcp comment 'Central Monitor'

@@ -4,7 +4,7 @@
 
 Đã hoàn thành 2 phần chính:
 
-### ✅ Phần 1: Central Monitor Authentication (Port 22002)
+### ✅ Phần 1: Central Monitor Authentication (Port 27009)
 - ✓ Login page với single admin account
 - ✓ Session-based authentication
 - ✓ Logout functionality
@@ -94,7 +94,7 @@ ADMIN_PASSWORD_HASH = "your_new_hash_here"
    python monitor_server.py
    ```
 
-2. **Truy cập:** http://localhost:22002
+2. **Truy cập:** http://localhost:27009
    - Sẽ tự động redirect đến `/login`
    
 3. **Login:**

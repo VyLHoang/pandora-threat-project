@@ -68,7 +68,7 @@ app = FastAPI(
 # CORS middleware - Only allow localhost for admin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:22002", "http://localhost:22002"],
+    allow_origins=["http://127.0.0.1:27009", "http://localhost:27009"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

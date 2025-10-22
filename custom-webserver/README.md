@@ -191,7 +191,7 @@ Invoke-WebRequest https://localhost -SkipCertificateCheck
 1. **Console output:** Real-time display
 2. **PostgreSQL:** `honeypot_logs` table
 3. **Elasticsearch:** `pandora-honeypot-logs-*` index
-4. **Central Monitor:** Web UI at http://localhost:22002/honeypot
+4. **Central Monitor:** Web UI at http://localhost:27009/honeypot
 
 ---
 

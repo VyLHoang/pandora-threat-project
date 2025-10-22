@@ -1,6 +1,6 @@
 """
 Authentication Configuration for Central Monitor
-Single admin account for secure access to port 22002
+Single admin account for secure access to port 27009
 """
 
 import bcrypt

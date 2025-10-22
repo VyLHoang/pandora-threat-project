@@ -52,7 +52,7 @@ class IDSEngine:
             25: 'SMTP',
             9000: 'Backend',
             5173: 'Frontend',
-            22002: 'Monitor'
+            27009: 'Monitor'
         }
         
         # Thresholds (more sensitive)

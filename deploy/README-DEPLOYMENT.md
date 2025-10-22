@@ -1,10 +1,10 @@
 # 🚀 Pandora Deployment Guide for VPS
 
 ## 📍 Server Information
-- **IP Address:** 172.235.245.60
+- **IP Address:** 172.232.246.68
 - **OS:** Ubuntu 22.04 LTS (recommended)
 - **User:** pandora
-- **SSH Port:** 2222
+- **SSH Port:** 27009
 
 ---
 
@@ -54,12 +54,12 @@ curl -k https://localhost/api/status
 ### **Test from outside:**
 ```bash
 # From your Windows machine:
-curl http://172.235.245.60
-curl -k https://172.235.245.60
+curl http://172.232.246.68
+curl -k https://172.232.246.68
 ```
 
 ### **Browser test:**
-- Open browser: `https://172.235.245.60`
+- Open browser: `https://172.232.246.68`
 - Accept self-signed certificate warning
 - Should see Vue.js frontend
 
@@ -193,8 +193,8 @@ htop
 ### **Check honeypot logs:**
 ```bash
 # Via Central Monitor
-# SSH tunnel: ssh -L 22002:localhost:22002 pandora@172.235.245.60 -p 2222
-# Open: http://localhost:22002/honeypot
+# SSH tunnel: ssh -L 27009:localhost:27009 pandora@172.232.246.68 -p 2222
+# Open: http://localhost:27009/honeypot
 
 # Via API
 curl http://localhost:9000/api/v1/honeypot/logs?limit=10
@@ -237,7 +237,7 @@ sudo systemctl cat pandora-http-80
 cd /home/pandora/projects/pandora-threat-project/custom-webserver
 openssl req -x509 -newkey rsa:4096 -nodes \
     -keyout server.key -out server.crt -days 365 \
-    -subj "/C=US/ST=State/L=City/O=Pandora/CN=172.235.245.60"
+    -subj "/C=US/ST=State/L=City/O=Pandora/CN=172.232.246.68"
 
 # Restart HTTPS service
 sudo systemctl restart pandora-https-443
@@ -263,7 +263,7 @@ Internet → Port 443 (HTTPS) → Frontend (Vue.js)
 
 ## ✅ Deployment Checklist
 
-- [ ] Server has public IP: 172.235.245.60
+- [ ] Server has public IP: 172.232.246.68
 - [ ] SSH configured (port 2222)
 - [ ] User 'pandora' created
 - [ ] Docker containers running (databases)
@@ -283,12 +283,12 @@ Internet → Port 443 (HTTPS) → Frontend (Vue.js)
 For issues:
 1. Check service logs: `sudo journalctl -u pandora-https-443 -n 100`
 2. Check system logs: `sudo tail -f /var/log/syslog`
-3. Test connectivity: `telnet 172.235.245.60 443`
+3. Test connectivity: `telnet 172.232.246.68 443`
 4. Check firewall: `sudo ufw status`
 
 ---
 
 **Deployment Date:** 2025-10-22  
-**Server IP:** 172.235.245.60  
+**Server IP:** 172.232.246.68  
 **Status:** Production Ready 🚀
 

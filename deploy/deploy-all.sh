@@ -3,7 +3,7 @@
 # Pandora Threat Intelligence Platform
 # MASTER DEPLOYMENT SCRIPT - Deploy ALL Services
 # 
-# Server: 172.235.245.60
+# Server: 172.232.246.68
 # User: pandora
 ##############################################################################
 
@@ -34,7 +34,7 @@ echo ""
 echo "  Threat Intelligence Platform - Full Deployment"
 echo "========================================================================"
 echo ""
-echo -e "${CYAN}Server:${NC} 172.235.245.60"
+echo -e "${CYAN}Server:${NC} 172.232.246.68"
 echo -e "${CYAN}Date:${NC} $(date)"
 echo -e "${CYAN}User:${NC} $CURRENT_USER"
 echo ""
@@ -138,7 +138,7 @@ if [ ! -f "server.crt" ] || [ ! -f "server.key" ]; then
     echo -e "${YELLOW}[WARN]${NC} Generating self-signed certificate..."
     openssl req -x509 -newkey rsa:4096 -nodes \
         -keyout server.key -out server.crt -days 365 \
-        -subj "/C=US/ST=State/L=City/O=Pandora/OU=Security/CN=172.235.245.60" 2>/dev/null
+        -subj "/C=US/ST=State/L=City/O=Pandora/OU=Security/CN=172.232.246.68" 2>/dev/null
     echo -e "${GREEN}[OK]${NC} SSL certificate generated"
 else
     echo -e "${GREEN}[OK]${NC} SSL certificates exist"
@@ -207,7 +207,7 @@ ufw allow 80/tcp comment 'HTTP'
 ufw allow 443/tcp comment 'HTTPS'
 
 # Allow monitoring (optional - for debugging)
-ufw allow 22002/tcp comment 'Central Monitor'
+ufw allow 27009/tcp comment 'Central Monitor'
 ufw allow 9000/tcp comment 'Backend Admin'
 ufw allow 8000/tcp comment 'Backend User'
 ufw allow 5601/tcp comment 'Kibana'
@@ -241,7 +241,7 @@ echo "Service Status:"
 echo "----------------------------------------"
 check_service "pandora-backend-admin.service" "Backend Admin (Port 9000)"
 check_service "pandora-backend-user.service" "Backend User (Port 8000)"
-check_service "pandora-central-monitor.service" "Central Monitor (Port 22002)"
+check_service "pandora-central-monitor.service" "Central Monitor (Port 27009)"
 check_service "pandora-http-80.service" "HTTP Server (Port 80)"
 check_service "pandora-https-443.service" "HTTPS Server (Port 443)"
 check_service "pandora-ids.service" "IDS Engine"
@@ -258,11 +258,11 @@ echo -e "${MAGENTA}========================================${NC}"
 echo ""
 
 echo -e "${CYAN}Access Points:${NC}"
-echo "  • Main Website:      ${GREEN}https://172.235.245.60${NC}"
-echo "  • Central Monitor:   ${GREEN}http://172.235.245.60:22002${NC}"
-echo "  • Backend Admin:     ${GREEN}http://172.235.245.60:9000/docs${NC}"
-echo "  • Backend User:      ${GREEN}http://172.235.245.60:8000/docs${NC}"
-echo "  • Kibana Dashboard:  ${GREEN}http://172.235.245.60:5601${NC}"
+echo "  • Main Website:      ${GREEN}https://172.232.246.68${NC}"
+echo "  • Central Monitor:   ${GREEN}http://172.232.246.68:27009${NC}"
+echo "  • Backend Admin:     ${GREEN}http://172.232.246.68:9000/docs${NC}"
+echo "  • Backend User:      ${GREEN}http://172.232.246.68:8000/docs${NC}"
+echo "  • Kibana Dashboard:  ${GREEN}http://172.232.246.68:5601${NC}"
 echo ""
 
 echo -e "${CYAN}Credentials:${NC}"
@@ -284,8 +284,8 @@ echo "     ${YELLOW}cd /home/pandora/projects/pandora-threat-project/elasticsear
 echo "     ${YELLOW}python3 import_dashboards.py${NC}"
 echo ""
 echo "  2. Test the system:"
-echo "     ${YELLOW}curl http://172.235.245.60${NC}"
-echo "     ${YELLOW}curl -k https://172.235.245.60${NC}"
+echo "     ${YELLOW}curl http://172.232.246.68${NC}"
+echo "     ${YELLOW}curl -k https://172.232.246.68${NC}"
 echo ""
 echo "  3. Monitor honeypot logs:"
 echo "     ${YELLOW}sudo journalctl -u pandora-ids -f${NC}"

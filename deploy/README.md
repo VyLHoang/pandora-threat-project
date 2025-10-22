@@ -8,7 +8,7 @@ Deployment scripts và hướng dẫn để deploy Pandora Threat Intelligence P
 
 ```bash
 # SSH vào VPS
-ssh pandora@172.235.245.60 -p 2222
+ssh pandora@172.232.246.68 -p 2222
 
 # Clone project
 cd ~/projects
@@ -60,7 +60,7 @@ sudo bash deploy/deploy-all.sh
 **Bao gồm:**
 - ✅ Backend Admin API (port 9000)
 - ✅ Backend User API (port 8000)
-- ✅ Central Monitor (port 22002)
+- ✅ Central Monitor (port 27009)
 - ✅ IDS Engine
 - ✅ HTTP Server (port 80)
 - ✅ HTTPS Server (port 443)
@@ -101,7 +101,7 @@ sudo bash deploy/test-deployment.sh
 # Manual check
 sudo systemctl status pandora-*
 docker ps
-sudo netstat -tuln | grep -E '80|443|8000|9000|22002'
+sudo netstat -tuln | grep -E '80|443|8000|9000|27009'
 ```
 
 ---
@@ -112,7 +112,7 @@ sudo netstat -tuln | grep -E '80|443|8000|9000|22002'
 |---------|------|------|-------------|
 | Backend Admin | 9000 | pandora | Admin API & Attack Management |
 | Backend User | 8000 | pandora | User API & Scanning Services |
-| Central Monitor | 22002 | pandora | Admin Dashboard (Flask) |
+| Central Monitor | 27009 | pandora | Admin Dashboard (Flask) |
 | IDS Engine | - | root | Network Intrusion Detection |
 | HTTP Server | 80 | root | HTTP Listener (Honeypot) |
 | HTTPS Server | 443 | root | HTTPS + Vue.js Frontend |
@@ -175,11 +175,11 @@ sudo systemctl list-units pandora-* --all
 
 After deployment:
 
-- **Main Website:** https://172.235.245.60
-- **Central Monitor:** http://172.235.245.60:22002 (admin/admin123)
-- **Backend Admin API:** http://172.235.245.60:9000/docs
-- **Backend User API:** http://172.235.245.60:8000/docs
-- **Kibana Dashboard:** http://172.235.245.60:5601 (elastic/pandora123)
+- **Main Website:** https://172.232.246.68
+- **Central Monitor:** http://172.232.246.68:27009 (admin/admin123)
+- **Backend Admin API:** http://172.232.246.68:9000/docs
+- **Backend User API:** http://172.232.246.68:8000/docs
+- **Kibana Dashboard:** http://172.232.246.68:5601 (elastic/pandora123)
 
 ---
 
@@ -287,7 +287,7 @@ sudo bash deploy/deploy-all.sh
 ## ✅ Deployment Checklist
 
 Before deploying:
-- [ ] Server có IP public: 172.235.245.60
+- [ ] Server có IP public: 172.232.246.68
 - [ ] SSH configured (port 2222)
 - [ ] User 'pandora' exists
 - [ ] Git repository cloned
@@ -296,7 +296,7 @@ Before deploying:
 After deploying:
 - [ ] All services running: `sudo systemctl status pandora-*`
 - [ ] Docker containers running: `docker ps`
-- [ ] Can access website: https://172.235.245.60
+- [ ] Can access website: https://172.232.246.68
 - [ ] Can login Central Monitor
 - [ ] Kibana dashboards imported
 - [ ] IDS capturing packets
@@ -316,7 +316,7 @@ sudo bash deploy/test-deployment.sh
 sudo systemctl list-units pandora-*
 
 # Check all listening ports
-sudo netstat -tuln | grep -E '80|443|8000|9000|22002|5432|6379|9200|5601'
+sudo netstat -tuln | grep -E '80|443|8000|9000|27009|5432|6379|9200|5601'
 
 # Docker status
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -329,6 +329,6 @@ sudo journalctl -u pandora-* --since "10 minutes ago"
 
 **Version:** 1.0.0  
 **Last Updated:** 2025-10-22  
-**Server:** 172.235.245.60  
+**Server:** 172.232.246.68  
 **Status:** Production Ready 🚀
 

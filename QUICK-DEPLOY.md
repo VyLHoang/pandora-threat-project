@@ -5,13 +5,13 @@
 ### **1. SSH vào VPS**
 
 ```bash
-ssh pandora@172.235.245.60 -p 2222
+ssh pandora@172.232.246.68 -p 2222
 ```
 
 Nếu chưa có user `pandora`, tạo user:
 ```bash
 # SSH as root first
-ssh root@172.235.245.60
+ssh root@172.232.246.68
 
 # Create user
 adduser pandora
@@ -19,7 +19,7 @@ usermod -aG sudo pandora
 
 # Exit and login as pandora
 exit
-ssh pandora@172.235.245.60 -p 2222
+ssh pandora@172.232.246.68 -p 2222
 ```
 
 ---
@@ -93,11 +93,11 @@ curl http://localhost:8000/api/v1/health
 ### **From your Windows machine:**
 
 Open browser:
-- **Website:** https://172.235.245.60
-- **Central Monitor:** http://172.235.245.60:22002 (admin/admin123)
-- **Admin API:** http://172.235.245.60:9000/docs
-- **User API:** http://172.235.245.60:8000/docs
-- **Kibana:** http://172.235.245.60:5601 (elastic/pandora123)
+- **Website:** https://172.232.246.68
+- **Central Monitor:** http://172.232.246.68:27009 (admin/admin123)
+- **Admin API:** http://172.232.246.68:9000/docs
+- **User API:** http://172.232.246.68:8000/docs
+- **Kibana:** http://172.232.246.68:5601 (elastic/pandora123)
 
 ---
 
@@ -111,7 +111,7 @@ After deployment, you'll have:
 | HTTPS Server | 443 | ✅ Running |
 | Backend User | 8000 | ✅ Running |
 | Backend Admin | 9000 | ✅ Running |
-| Central Monitor | 22002 | ✅ Running |
+| Central Monitor | 27009 | ✅ Running |
 | IDS Engine | - | ✅ Running |
 | PostgreSQL (3x) | 5432, 5433, 5434 | ✅ Running |
 | Redis (3x) | 6379, 6380, 6381 | ✅ Running |
