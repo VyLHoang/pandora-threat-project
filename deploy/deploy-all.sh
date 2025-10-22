@@ -71,7 +71,7 @@ echo -e "${GREEN}[2/5]${NC} Installing system dependencies..."
 apt install -y python3 python3-pip python3-venv curl wget git htop net-tools >/dev/null 2>&1
 
 echo -e "${GREEN}[3/5]${NC} Installing Python packages..."
-pip3 install --break-system-packages -q --upgrade pip
+# Skip pip upgrade (already managed by apt)
 pip3 install --break-system-packages -q fastapi uvicorn sqlalchemy psycopg2-binary redis elasticsearch \
     python-jose passlib bcrypt python-multipart aiofiles pydantic-settings \
     scapy geoip2 requests flask || {
