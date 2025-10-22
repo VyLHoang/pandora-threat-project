@@ -1,6 +1,6 @@
 """
 Central Monitoring Server - NO JAVASCRIPT VERSION
-Port 22002 - Server-Side Rendered with Jinja2 Templates
+Port 27009 - Server-Side Rendered with Jinja2 Templates
 PURE PYTHON + HTML + CSS - Maximum Security
 WITH AUTHENTICATION
 """
@@ -422,13 +422,13 @@ if __name__ == '__main__':
     print('[CENTRAL MONITOR] Starting Pandora Platform Admin Console')
     print('[SECURE MODE] Server-Side Rendering - NO JAVASCRIPT')
     print('='*70)
-    print('[OK] Admin Console:    http://127.0.0.1:22002')
-    print('[OK] Traffic Monitor:  http://127.0.0.1:22002/traffic')
-    print('[OK] IDS Dashboard:    http://127.0.0.1:22002/attacks')
-    print('[OK] Honeypot Monitor: http://127.0.0.1:22002/honeypot')
-    print('[OK] User Monitoring:  http://127.0.0.1:22002/users')
-    print('[OK] API Logs:         http://127.0.0.1:22002/api/logs')
-    print('[OK] API Stats:        http://127.0.0.1:22002/api/stats')
+    print('[OK] Admin Console:    http://127.0.0.1:27009')
+    print('[OK] Traffic Monitor:  http://127.0.0.1:27009/traffic')
+    print('[OK] IDS Dashboard:    http://127.0.0.1:27009/attacks')
+    print('[OK] Honeypot Monitor: http://127.0.0.1:27009/honeypot')
+    print('[OK] User Monitoring:  http://127.0.0.1:27009/users')
+    print('[OK] API Logs:         http://127.0.0.1:27009/api/logs')
+    print('[OK] API Stats:        http://127.0.0.1:27009/api/stats')
     print('='*70)
     print('[MONITOR] Watching:')
     print('  - Backend API (Port 8000)')
@@ -443,5 +443,5 @@ if __name__ == '__main__':
     print('[REFRESH] Auto-refresh every 30 seconds (HTTP meta tag)')
     print('='*70)
     
-    app.run(host='127.0.0.1', port=22002, debug=False)
+    app.run(host='127.0.0.1', port=27009, debug=False)
 
