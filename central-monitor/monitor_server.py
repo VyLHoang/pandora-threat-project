@@ -6,7 +6,6 @@ WITH AUTHENTICATION
 """
 
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
-from flask_cors import CORS
 from datetime import datetime, timedelta
 from collections import deque
 from sqlalchemy import create_engine, func, desc, and_
@@ -42,8 +41,6 @@ app = Flask(__name__,
 app.config['SECRET_KEY'] = AuthConfig.SESSION_SECRET_KEY
 app.config['SESSION_COOKIE_NAME'] = AuthConfig.SESSION_COOKIE_NAME
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=AuthConfig.SESSION_LIFETIME_HOURS)
-
-CORS(app)
 
 # Add timedelta to Jinja2 globals for timezone conversion (Vietnam = UTC+7)
 app.jinja_env.globals.update(timedelta=timedelta)
