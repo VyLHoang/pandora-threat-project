@@ -239,8 +239,8 @@ check_service() {
 
 echo "Service Status:"
 echo "----------------------------------------"
-check_service "pandora-backend-admin.service" "Backend Admin (Port 9000)"
-check_service "pandora-backend-user.service" "Backend User (Port 8000)"
+check_service "pandora-backend-admin.service" "Backend Admin (Port 8001)"
+check_service "pandora-backend-user.service" "Backend User (Port 8002)"
 check_service "pandora-central-monitor.service" "Central Monitor (Port 27009)"
 check_service "pandora-http-80.service" "HTTP Server (Port 80)"
 check_service "pandora-https-443.service" "HTTPS Server (Port 443)"

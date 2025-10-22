@@ -306,8 +306,8 @@ SERVICES=(
     "pandora-backend-user"
     "pandora-central-monitor"
     "pandora-ids"
-    "pandora-http-listener"
-    "pandora-https-listener"
+    "pandora-http-80"
+    "pandora-https-443"
 )
 
 for service in "${SERVICES[@]}"; do

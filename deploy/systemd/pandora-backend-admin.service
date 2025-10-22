@@ -1,15 +1,15 @@
 [Unit]
 Description=Pandora Backend Admin API
-After=network.target network-online.target postgresql.service
+After=network.target network-online.target docker.service
 Wants=network-online.target
-Requires=postgresql.service redis.service elasticsearch.service
+Requires=docker.service
 
 [Service]
 Type=simple
 User=pandora
 Group=pandora
 WorkingDirectory=/home/pandora/projects/pandora-threat-project/backend-admin
-ExecStart=/usr/bin/python3 -m uvicorn api.main:app --host 0.0.0.0 --port 9000
+ExecStart=/usr/bin/python3 -m uvicorn api.main:app --host 0.0.0.0 --port 8001
 Restart=always
 RestartSec=10
 StandardOutput=journal
