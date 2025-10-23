@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     # Monitoring
     CENTRAL_MONITOR_URL: str = "http://localhost:27009/api/logs"
     ENABLE_MONITORING: bool = True
+    CENTRAL_MONITOR_API_KEY: str = "change-this-api-key-in-production"  # API key for Honeypot→Central communication
     
     # Elasticsearch
     ELASTICSEARCH_HOSTS: List[str] = ["http://localhost:9200"]

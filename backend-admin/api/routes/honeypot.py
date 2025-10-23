@@ -33,22 +33,28 @@ router = APIRouter()
 
 class HoneypotLogRequest(BaseModel):
     """Request schema for honeypot log submission"""
+    client_ip: str  # From Honeypot Server
+    user_agent: Optional[str] = ""
     session_id: Optional[str] = None
+    user_id: Optional[int] = None
+    is_authenticated: bool = False
     request_method: str
     request_path: str
     request_headers: Dict
     request_body: Optional[str] = None
     response_status: Optional[int] = None
     response_size: Optional[int] = None
-    activity_type: str  # scan, login_attempt, failed_login, page_view, api_call
+    activity_type: str  # scan, login_attempt, failed_login, page_view, api_call, fake_probe
     scan_target: Optional[str] = None
     scan_hash: Optional[str] = None
     suspicious_score: Optional[int] = 0
     suspicious_reasons: Optional[List[str]] = []
+    is_fake_path: bool = False
+    timestamp: Optional[str] = None
 
     @validator('activity_type')
     def validate_activity_type(cls, v):
-        valid_types = ['scan', 'login_attempt', 'failed_login', 'page_view', 'api_call']
+        valid_types = ['scan', 'login_attempt', 'failed_login', 'page_view', 'api_call', 'fake_probe', 'legitimate_access']
         if v not in valid_types:
             raise ValueError(f'activity_type must be one of: {valid_types}')
         return v
@@ -98,11 +104,18 @@ async def log_honeypot_activity(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Log honeypot activity from port 443"""
+    """Log honeypot activity from Honeypot Server (remote)"""
     try:
-        # Get client info
-        client_ip = request.client.host
-        user_agent = request.headers.get('User-Agent', 'Unknown')
+        # Validate API Key
+        api_key = request.headers.get('X-API-Key')
+        expected_key = settings.CENTRAL_MONITOR_API_KEY if hasattr(settings, 'CENTRAL_MONITOR_API_KEY') else 'your-secret-key'
+        
+        if api_key != expected_key:
+            raise HTTPException(status_code=403, detail="Invalid API Key")
+        
+        # Use client info from log_data (not from request, because it's proxied)
+        client_ip = log_data.client_ip
+        user_agent = log_data.user_agent or 'Unknown'
 
         # Get GeoIP info
         geoip_info = geoip_service.lookup(client_ip)
@@ -110,20 +123,9 @@ async def log_honeypot_activity(
         # Get WHOIS info
         whois_info = whois_service.lookup_whois(client_ip)
 
-        # Extract JWT token to determine authentication status
-        auth_header = request.headers.get('Authorization')
-        is_authenticated = False
-        user_id = None
-
-        if auth_header and auth_header.startswith('Bearer '):
-            try:
-                token = auth_header.split(' ')[1]
-                # Validate token (simplified - in real app use proper JWT validation)
-                # For now, we'll assume any Bearer token means authenticated
-                is_authenticated = True
-                # TODO: Extract actual user_id from JWT token
-            except:
-                pass
+        # Use authentication status from log_data (from Honeypot Server)
+        is_authenticated = log_data.is_authenticated
+        user_id = log_data.user_id
 
         # Determine activity type if not provided
         if log_data.activity_type == 'auto_detect':
