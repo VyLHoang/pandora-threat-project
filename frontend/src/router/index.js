@@ -43,7 +43,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/app/'),  // Real app hidden at /app/ path
   routes
 })
 

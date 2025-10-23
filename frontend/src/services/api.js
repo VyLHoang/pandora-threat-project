@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE = '/api/v1'
+// Updated to match new Nginx routing
+// Nginx: /api/user/* -> Backend User (Port 8001)
+const API_BASE = '/api/user'
 
 const api = axios.create({
   baseURL: API_BASE,
