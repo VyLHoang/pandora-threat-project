@@ -1,28 +1,43 @@
 [Unit]
-Description=Pandora Backend Admin API
-After=network.target network-online.target docker.service
-Wants=network-online.target
-Requires=docker.service
+Description=Pandora Admin Backend API (Port 9000)
+Documentation=https://github.com/yourusername/threat_project
+After=network.target postgresql.service redis.service elasticsearch.service
 
 [Service]
 Type=simple
 User=pandora
 Group=pandora
-WorkingDirectory=/home/pandora/projects/pandora-threat-project/backend-admin
-ExecStart=/usr/bin/python3 -m uvicorn api.main:app --host 0.0.0.0 --port 8001
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
+WorkingDirectory=/opt/pandora/backend-admin
 
 # Environment
-Environment="PYTHONPATH=/home/pandora/projects/pandora-threat-project/backend-admin"
+Environment="PYTHONPATH=/opt/pandora"
 Environment="PYTHONUNBUFFERED=1"
 
-# Security
+# Start command
+ExecStart=/opt/pandora/backend-admin/venv/bin/uvicorn api.main:app \
+    --host 127.0.0.1 \
+    --port 8002 \
+    --workers 2 \
+    --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security (Admin API - localhost only)
 NoNewPrivileges=true
 PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+# Resource limits
+LimitNOFILE=65535
+MemoryLimit=512M
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pandora-backend-admin
 
 [Install]
 WantedBy=multi-user.target
-

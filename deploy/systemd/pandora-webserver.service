@@ -1,0 +1,48 @@
+[Unit]
+Description=Pandora Custom Webserver (FastAPI)
+Documentation=https://github.com/yourusername/threat_project
+After=network.target nginx.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/pandora/custom-webserver
+
+# Environment
+Environment="PYTHONPATH=/opt/pandora"
+Environment="PYTHONUNBUFFERED=1"
+
+# Start command (Production với Gunicorn + Uvicorn workers)
+ExecStart=/opt/pandora/custom-webserver/venv/bin/gunicorn webserver_fastapi:app \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8443 \
+    --access-logfile /var/log/pandora/webserver-access.log \
+    --error-logfile /var/log/pandora/webserver-error.log \
+    --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/pandora
+
+# Resource limits
+LimitNOFILE=65535
+MemoryLimit=1G
+CPUQuota=80%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pandora-webserver
+
+[Install]
+WantedBy=multi-user.target
+

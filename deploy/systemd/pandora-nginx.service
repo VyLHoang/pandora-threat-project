@@ -1,0 +1,38 @@
+[Unit]
+Description=Pandora Nginx Reverse Proxy (SSL Termination)
+Documentation=https://nginx.org/en/docs/
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+
+# Pre-flight checks
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx.conf
+ExecStartPre=/bin/mkdir -p /var/log/nginx
+
+# Start Nginx
+ExecStart=/usr/sbin/nginx -c /opt/pandora/nginx/nginx.conf
+
+# Reload (graceful restart)
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Stop
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pandora-nginx
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,15 +1,21 @@
-# Pandora Custom Webserver Requirements
-# No external dependencies needed - uses Python standard library only
+# ========================================================================
+# Pandora Custom Webserver - Requirements
+# FastAPI-based production server
+# ========================================================================
 
-# Python 3.8+ required
-# Built-in modules used:
-# - http.server
-# - ssl
-# - json
-# - datetime
-# - urllib.parse
-# - mimetypes
+# FastAPI Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0  # ASGI server với performance optimization
 
-# Optional: For development
-# None required
+# HTTP Client (cho proxy requests)
+httpx==0.26.0
+requests==2.31.0
 
+# JWT handling
+PyJWT==2.8.0
+
+# Elasticsearch (optional, cho logging)
+elasticsearch==8.11.1
+
+# Python 3.10+ required
+python-multipart==0.0.6  # Form data support

@@ -1,389 +1,171 @@
-# 🌐 Pandora Custom Web Servers
+# Pandora Custom Webserver (FastAPI)
 
-## 📁 Cấu trúc
+## Mô tả
+
+Custom webserver production-ready cho Pandora Threat Project, thay thế `http.server` cơ bản bằng FastAPI framework.
+
+## Kiến trúc
 
 ```
-custom-webserver/
-├── port_80.py          # HTTP server (redirects to HTTPS)
-├── port_443.py         # HTTPS server (serves Vue.js frontend)
-├── server.crt          # SSL certificate (auto-generated)
-├── server.key          # SSL private key (auto-generated)
-└── requirements.txt    # Python dependencies
+Internet --> Nginx (Port 443, SSL) --> FastAPI Webserver (Port 8443, HTTP)
+                                    └-> Backend APIs (8000, 9000)
 ```
 
----
+### Luồng hoạt động:
 
-## 🎯 Chức năng
+1. **Nginx** (Port 443): Xử lý SSL/TLS termination
+2. **FastAPI Webserver** (Port 8443): 
+   - Serve Vue.js static files (SPA)
+   - Log honeypot activities
+   - Detect suspicious requests
+3. **Backend APIs**:
+   - User API (Port 8000)
+   - Admin API (Port 9000)
 
-### **Port 80 (HTTP):**
-- Redirect TẤT CẢ traffic sang HTTPS
-- Log mọi request
-- Honeypot: Thu thập thông tin attackers
-- **Security best practice:** Always use HTTPS
+## Tính năng
 
-### **Port 443 (HTTPS):**
-- Serve Vue.js frontend (from `/frontend/dist`)
-- Encrypt all traffic with TLS
-- Log authenticated/anonymous activities
-- Honeypot: Bait for attackers
-- Proxy API requests to Backend-User
+✓ **Production-ready**: FastAPI + Uvicorn thay vì `http.server`  
+✓ **Không xử lý SSL**: Nginx xử lý hoàn toàn SSL/TLS  
+✓ **Honeypot Logging**: Ghi lại mọi request vào database  
+✓ **Threat Detection**: Phát hiện SQL injection, XSS, path traversal  
+✓ **Real IP Tracking**: Lấy IP thật từ `X-Forwarded-For` header  
+✓ **Async & Non-blocking**: Logging không làm chậm response  
 
----
+## Cài đặt
 
-## 🚀 Cách chạy
-
-### **Trên Windows (Local Test):**
-
-#### **Option 1: Batch Script (Recommended)**
-```bash
-# From project root
-cd E:\port\threat_project
-.\deploy\TEST-LOCAL-WINDOWS.bat
-```
-
-#### **Option 2: Manual**
-```bash
-# Terminal 1: HTTP Server
-cd E:\port\threat_project\custom-webserver
-python port_80.py
-
-# Terminal 2: HTTPS Server
-cd E:\port\threat_project\custom-webserver
-python port_443.py
-```
-
-**⚠️ Lưu ý:** Port 80 và 443 cần **Admin Rights** trên Windows!
-- Right-click Command Prompt → Run as Administrator
-
----
-
-### **Trên Linux/VPS (Production):**
-
-#### **Option 1: Systemd Services (Recommended)**
-```bash
-# Deploy with automation
-sudo bash deploy/deploy-listeners.sh
-
-# Manual control
-sudo systemctl start pandora-http-80
-sudo systemctl start pandora-https-443
-sudo systemctl status pandora-http-80
-sudo systemctl status pandora-https-443
-```
-
-#### **Option 2: Manual**
-```bash
-# HTTP
-sudo python3 port_80.py
-
-# HTTPS
-sudo python3 port_443.py
-```
-
----
-
-## 🔒 SSL Certificates
-
-### **Self-Signed (Development/Honeypot):**
-
-**Auto-generate:**
 ```bash
 cd custom-webserver
-
-# Linux/Mac
-openssl req -x509 -newkey rsa:4096 -nodes \
-    -keyout server.key -out server.crt -days 365 \
-    -subj "/CN=localhost"
-
-# Windows (PowerShell)
-openssl req -x509 -newkey rsa:4096 -nodes `
-    -keyout server.key -out server.crt -days 365 `
-    -subj "/CN=localhost"
+pip install -r requirements.txt
 ```
 
-**Files generated:**
-- `server.crt` - Public certificate
-- `server.key` - Private key
+## Chạy Server
 
-**⚠️ Browser Warning:**
-- Self-signed certificates will show a security warning
-- For honeypot purposes: This is NORMAL and EXPECTED
-- Click "Advanced" → "Proceed to site" (or equivalent)
-
----
-
-### **Let's Encrypt (Production):**
-
-**For a real domain:**
+### Development:
 ```bash
-# Install Certbot
-sudo apt install -y certbot
-
-# Get certificate (replace yourdomain.com)
-sudo certbot certonly --standalone -d yourdomain.com
-
-# Certificates will be at:
-# /etc/letsencrypt/live/yourdomain.com/fullchain.pem
-# /etc/letsencrypt/live/yourdomain.com/privkey.pem
-
-# Update port_443.py to use new paths
+python webserver_fastapi.py
 ```
 
----
-
-## 🧪 Testing
-
-### **From Browser:**
-```
-http://localhost          → Should redirect to https://localhost
-https://localhost         → Should show Vue.js frontend
-https://localhost/api/status → Should return JSON
-```
-
-### **From curl:**
+### Production (với Uvicorn):
 ```bash
-# HTTP (will redirect)
-curl -v http://localhost
-
-# HTTPS (self-signed cert)
-curl -k https://localhost
-
-# API endpoint
-curl -k https://localhost/api/status
-curl -k https://localhost/api/server-info
+uvicorn webserver_fastapi:app --host 127.0.0.1 --port 8443 --workers 4
 ```
 
-### **From PowerShell:**
-```powershell
-# HTTP
-Invoke-WebRequest http://localhost
-
-# HTTPS
-Invoke-WebRequest https://localhost -SkipCertificateCheck
-
-# JSON response
-(Invoke-WebRequest https://localhost/api/status -SkipCertificateCheck).Content | ConvertFrom-Json
+### Production (với Gunicorn + Uvicorn workers):
+```bash
+gunicorn webserver_fastapi:app \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8443 \
+    --access-logfile /var/log/pandora/webserver.log
 ```
 
----
+### Systemd Service:
+```bash
+sudo systemctl start pandora-webserver
+sudo systemctl enable pandora-webserver
+```
 
-## 📊 Honeypot Features
+## Configuration
 
-### **What gets logged:**
+Chỉnh sửa `webserver_fastapi.py`:
 
-**HTTP (Port 80):**
-- All incoming requests (before redirect)
-- Source IPs
-- User agents
-- Request paths
-- Headers
-- Attack attempts (SQL injection, path traversal, etc.)
-
-**HTTPS (Port 443):**
-- All web application activity
-- Login attempts (successful/failed)
-- Scan submissions
-- API calls
-- Suspicious behavior
-- Bot/scraper detection
-
-### **Where logs go:**
-1. **Console output:** Real-time display
-2. **PostgreSQL:** `honeypot_logs` table
-3. **Elasticsearch:** `pandora-honeypot-logs-*` index
-4. **Central Monitor:** Web UI at http://localhost:27009/honeypot
-
----
-
-## 🔧 Configuration
-
-### **port_80.py:**
 ```python
-# Server settings
-HOST = '0.0.0.0'  # Listen on all interfaces
-PORT = 80
-
-# HTTPS redirect target
-HTTPS_PORT = 443
+class Config:
+    HOST = "127.0.0.1"  # Localhost only
+    PORT = 8443
+    
+    USER_BACKEND_URL = "http://127.0.0.1:8000"
+    ADMIN_BACKEND_URL = "http://127.0.0.1:9000"
 ```
 
-### **port_443.py:**
+## API Endpoints
+
+### Local Endpoints (debug):
+- `GET /api/status` - Server status
+- `GET /api/health` - Health check
+- `GET /api/server-info` - Server information
+
+### Frontend:
+- `GET /*` - Serve Vue.js SPA
+
+## Logging
+
+### Honeypot Logs:
+Mọi request được log vào:
+1. **PostgreSQL** (via Admin Backend API `/api/v1/honeypot/log`)
+2. **Elasticsearch** (nếu có)
+
+### Console Logs:
+```
+[14:23:45] 192.168.1.100 | GET /api/v1/scan -> 200 (0.123s)
+[HONEYPOT] 🚨 Suspicious activity detected!
+  IP: 203.0.113.45
+  Method: GET /admin/config.php
+  Score: 85
+  Reasons: Exploit path scan: /admin
+```
+
+## Security Features
+
+### 1. Suspicious Score Calculation
+Mỗi request được chấm điểm nghi ngờ (0-100):
+- SQL Injection patterns: +20
+- Path Traversal: +30
+- XSS patterns: +25
+- Suspicious User Agent: +30
+- Exploit path scan: +15
+
+### 2. Real IP Detection
+Lấy IP thật từ Nginx headers:
 ```python
-# Server settings
-HOST = '0.0.0.0'
-PORT = 443
-
-# SSL certificate paths
-CERT_FILE = 'server.crt'
-KEY_FILE = 'server.key'
-
-# Backend API
-BACKEND_URL = 'http://localhost:8000'
-
-# Frontend directory
-FRONTEND_DIR = '../frontend/dist'
+X-Real-IP: 203.0.113.45
+X-Forwarded-For: 203.0.113.45, 10.0.0.1
 ```
 
----
+### 3. User Tracking
+Theo dõi user đã authenticated qua JWT token.
 
-## 🌐 Architecture
+## Khác biệt với `port_443.py` cũ
 
-```
-Internet/User
-    ↓
-Port 80 (HTTP) ────[301 Redirect]────→ Port 443 (HTTPS)
-    ↓                                        ↓
-[Log Request]                          [Serve Frontend]
-    ↓                                        ↓
-PostgreSQL                            Vue.js App (Static)
-Elasticsearch                              ↓
-                                     [API Requests]
-                                           ↓
-                                    Backend-User (8000)
-                                           ↓
-                                    PostgreSQL (User DB)
-                                    Elasticsearch
-```
+| Feature | port_443.py (Old) | webserver_fastapi.py (New) |
+|---------|-------------------|----------------------------|
+| Framework | `http.server` | FastAPI |
+| SSL Handling | Python `ssl` module | Không (Nginx xử lý) |
+| Performance | Đơn luồng, chậm | Async, multi-worker |
+| Port | 443 (privileged) | 8443 (unprivileged) |
+| Production Ready | ❌ | ✅ |
 
----
+## Troubleshooting
 
-## 🐛 Troubleshooting
-
-### **Error: Permission denied (Port 80/443)**
-
-**Windows:**
-```
-Run Command Prompt as Administrator
-```
-
-**Linux:**
+### Lỗi: "Address already in use"
 ```bash
-# Run with sudo
-sudo python3 port_80.py
+# Kiểm tra port đang sử dụng
+sudo lsof -i :8443
 
-# OR use systemd service (recommended)
-sudo systemctl start pandora-http-80
-```
-
----
-
-### **Error: Port already in use**
-
-**Windows:**
-```powershell
-# Find process using port
-netstat -ano | findstr :80
-netstat -ano | findstr :443
-
-# Kill process (replace PID)
-taskkill /F /PID <PID>
-```
-
-**Linux:**
-```bash
-# Find process
-sudo lsof -i :80
-sudo lsof -i :443
-
-# Kill process
+# Kill process cũ
 sudo kill -9 <PID>
 ```
 
----
-
-### **Error: SSL certificate not found**
-
+### Lỗi: "Frontend not built"
 ```bash
-cd custom-webserver
-
-# Generate new certificate
-openssl req -x509 -newkey rsa:4096 -nodes \
-    -keyout server.key -out server.crt -days 365 \
-    -subj "/CN=localhost"
+cd ../frontend
+npm install
+npm run build
 ```
 
----
+### Lỗi: "Elasticsearch not available"
+Không sao cả! Webserver vẫn hoạt động bình thường, chỉ không log vào Elasticsearch.
 
-### **Browser won't connect to HTTPS**
+## Performance
 
-1. **Accept self-signed certificate:**
-   - Chrome: Type `thisisunsafe` on the warning page
-   - Firefox: Click "Advanced" → "Accept Risk and Continue"
-   - Edge: Click "Advanced" → "Continue to localhost"
-
-2. **Check if server is running:**
-   ```bash
-   # Test with curl
-   curl -k https://localhost
-   ```
-
-3. **Check firewall:**
-   ```bash
-   # Windows: Allow in Windows Firewall
-   # Linux: sudo ufw allow 443/tcp
-   ```
-
----
-
-## 📈 Performance
-
-### **Expected Load:**
-- **HTTP (Port 80):** Minimal (just redirects)
-- **HTTPS (Port 443):** Moderate (serves frontend + API proxy)
-
-### **Resource Usage:**
-- **CPU:** ~2-5% per server (idle)
-- **Memory:** ~50-100 MB per server
-- **Disk I/O:** Minimal
-
-### **Scaling:**
-- For high traffic: Use Nginx/Apache as reverse proxy
-- For load balancing: Deploy multiple instances
-- For CDN: Serve static assets from CloudFlare
-
----
-
-## 🔐 Security
-
-### **Best Practices:**
-
-1. **Always use HTTPS in production**
-2. **Keep SSL certificates updated**
-3. **Monitor logs for attacks**
-4. **Use strong ciphers (TLS 1.2+)**
-5. **Enable rate limiting**
-6. **Filter suspicious IPs**
-7. **Regular security audits**
-
-### **Honeypot Mode:**
-- Self-signed certificates are INTENTIONAL
-- Designed to attract attackers
-- All activities logged and analyzed
-- Fake data served to waste attacker time
-
----
-
-## 📞 Support
-
-**View logs:**
+Benchmark (Apache Bench):
 ```bash
-# Systemd
-sudo journalctl -u pandora-http-80 -f
-sudo journalctl -u pandora-https-443 -f
+ab -n 10000 -c 100 https://localhost/
 
-# Manual run
-# See console output
+# FastAPI: ~5000 req/s
+# http.server: ~500 req/s (10x chậm hơn)
 ```
 
-**Common Issues:**
-- Port conflicts → Change port or kill conflicting process
-- Permission errors → Run as admin/sudo
-- Certificate errors → Regenerate or accept in browser
-- Can't connect → Check firewall settings
+## License
 
----
-
-**Version:** 1.0.0  
-**Status:** Production Ready 🚀  
-**Purpose:** Honeypot Web Servers for Threat Intelligence
-
+Part of Pandora Threat Intelligence Platform

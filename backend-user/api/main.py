@@ -124,8 +124,8 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "api.main:app",
-        host=settings.HOST,
-        port=8000,
+        host="127.0.0.1",  # Localhost only (Nginx proxy)
+        port=8001,  # New port for User Backend
         reload=settings.DEBUG
     )
 

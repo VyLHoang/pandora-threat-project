@@ -435,10 +435,11 @@ if __name__ == '__main__':
     print('  - Port 80/443 (HTTP/HTTPS)')
     print('  - IDS Engine (Network-wide)')
     print('='*70)
-    print('[ADMIN] Listening on all interfaces (0.0.0.0:27009)')
+    print('[ADMIN] Listening on localhost only (127.0.0.1:5000)')
     print('[SECURITY] Pure server-side rendering - No client-side JavaScript')
+    print('[SECURITY] Access via Nginx: https://domain/admin-dashboard/')
     print('[REFRESH] Auto-refresh every 30 seconds (HTTP meta tag)')
     print('='*70)
     
-    app.run(host='0.0.0.0', port=27009, debug=False)
+    app.run(host='127.0.0.1', port=5000, debug=False)  # Localhost only (Nginx proxy)
 

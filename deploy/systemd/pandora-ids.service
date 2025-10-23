@@ -1,29 +1,41 @@
 [Unit]
-Description=Pandora IDS Engine - Network Intrusion Detection
-After=network.target network-online.target docker.service
-Wants=network-online.target
-Requires=docker.service
+Description=Pandora IDS Engine (Network Intrusion Detection)
+Documentation=https://github.com/yourusername/threat_project
+After=network.target postgresql.service
 
 [Service]
 Type=simple
+
+# IDS cần chạy với quyền root để capture packets
 User=root
 Group=root
-WorkingDirectory=/home/pandora/projects/pandora-threat-project/ids
-ExecStart=/usr/bin/python3 ids_engine.py
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
 
-# Network packet capture capabilities
-CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN CAP_NET_BIND_SERVICE
-AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
-NoNewPrivileges=true
+WorkingDirectory=/opt/pandora/ids
 
 # Environment
-Environment="PYTHONPATH=/home/pandora/projects/pandora-threat-project/backend-admin"
+Environment="PYTHONPATH=/opt/pandora"
 Environment="PYTHONUNBUFFERED=1"
+
+# Start command
+ExecStart=/opt/pandora/ids/venv/bin/python ids_engine.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security (minimal vì cần root)
+NoNewPrivileges=true
+ProtectHome=true
+
+# Resource limits (IDS có thể dùng nhiều CPU)
+LimitNOFILE=65535
+MemoryLimit=1G
+CPUQuota=50%  # Giới hạn 50% CPU để không ảnh hưởng services khác
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pandora-ids
 
 [Install]
 WantedBy=multi-user.target
-
