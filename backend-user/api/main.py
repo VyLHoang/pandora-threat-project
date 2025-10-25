@@ -79,16 +79,69 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-# Request logging middleware
+# Suspicious activity logging middleware
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_suspicious_activities(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
     
-    print(f"[USER-API] {request.method} {request.url.path} - {response.status_code} ({process_time:.2f}s)")
+    # Only log suspicious activities (not all requests)
+    if is_suspicious_activity(request, response):
+        try:
+            client_ip = request.headers.get("X-Real-IP", request.client.host)
+            log_data = {
+                "client_ip": client_ip,
+                "user_agent": request.headers.get("User-Agent", ""),
+                "request_method": request.method,
+                "request_path": request.url.path,
+                "request_headers": dict(request.headers),
+                "response_status": response.status_code,
+                "is_fake_path": False,
+                "activity_type": "suspicious_user_activity",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Send to Central Monitor
+            import httpx
+            async with httpx.AsyncClient(verify=False) as client:
+                await client.post(
+                    settings.CENTRAL_MONITOR_URL,
+                    json=log_data,
+                    headers={"X-API-Key": settings.CENTRAL_MONITOR_API_KEY},
+                    timeout=5
+                )
+        except Exception as e:
+            print(f"[ERROR] Failed to log suspicious activity: {e}")
     
     return response
+
+def is_suspicious_activity(request: Request, response) -> bool:
+    """Check if request/response indicates suspicious activity"""
+    # Failed authentication attempts
+    if response.status_code == 401 or response.status_code == 403:
+        return True
+    
+    # Rate limiting violations
+    if response.status_code == 429:
+        return True
+    
+    # Unusual user agents
+    user_agent = request.headers.get("User-Agent", "").lower()
+    suspicious_agents = ['sqlmap', 'nmap', 'nessus', 'nikto', 'burp', 'w3af']
+    if any(agent in user_agent for agent in suspicious_agents):
+        return True
+    
+    # Suspicious paths
+    path = request.url.path.lower()
+    suspicious_paths = ['/admin', '/phpmyadmin', '/wp-admin', '/.env', '/config.php']
+    if any(susp_path in path for susp_path in suspicious_paths):
+        return True
+    
+    # Multiple failed requests from same IP (would need session tracking)
+    # For now, just check for obvious suspicious patterns
+    
+    return False
 
 # Health check
 @app.get("/health")

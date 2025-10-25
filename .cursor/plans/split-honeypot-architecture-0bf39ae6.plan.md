@@ -46,13 +46,13 @@ Admin Only → Nginx (443, SSL) → Central Monitor (5000)
 Routing logic:
 
 - Fake paths (đứng trước, nhiều): `/admin`, `/phpmyadmin`, `/wp-admin`, `/config`, `/.env`, `/api/admin`, `/administrator`, `/cpanel`, `/backup`, etc
-        - Return fake HTML responses
-        - Log to Central Monitor (high priority)
+                - Return fake HTML responses
+                - Log to Central Monitor (high priority)
 - Real paths (ẩn sau): `/app/*`, `/dashboard`, `/scan`, `/login`, `/register`
-        - Serve Vue.js SPA
-        - Log to Central Monitor (normal priority)
+                - Serve Vue.js SPA
+                - Log to Central Monitor (normal priority)
 - API paths: `/api/user/*`
-        - Proxy to Backend-user (localhost:8001)
+                - Proxy to Backend-user (localhost:8001)
 
 Fake responses:
 
@@ -233,8 +233,8 @@ const router = createRouter({
 **Central Monitor Server:**
 
 - PostgreSQL với tất cả databases:
-        - `pandora_user` (users, scans)
-        - `pandora_admin` (honeypot_logs, attack_logs)
+                - `pandora_user` (users, scans)
+                - `pandora_admin` (honeypot_logs, attack_logs)
 
 ### 9. Deployment Scripts
 

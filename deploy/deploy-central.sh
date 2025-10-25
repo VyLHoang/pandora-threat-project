@@ -76,9 +76,20 @@ else
 fi
 
 # ========================================================================
-# 5. Install Backend-admin
+# 5. Install Backend-user (Real User App)
 # ========================================================================
-echo -e "${GREEN}[5/9] Installing Backend-admin...${NC}"
+echo -e "${GREEN}[5/10] Installing Backend-user...${NC}"
+cd $INSTALL_DIR/backend-user
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+chown -R pandora:pandora venv
+
+# ========================================================================
+# 6. Install Backend-admin
+# ========================================================================
+echo -e "${GREEN}[6/10] Installing Backend-admin...${NC}"
 cd $INSTALL_DIR/backend-admin
 python3 -m venv venv
 source venv/bin/activate
@@ -87,9 +98,9 @@ deactivate
 chown -R pandora:pandora venv
 
 # ========================================================================
-# 6. Install Central Monitor
+# 7. Install Central Monitor
 # ========================================================================
-echo -e "${GREEN}[6/9] Installing Central Monitor...${NC}"
+echo -e "${GREEN}[7/10] Installing Central Monitor...${NC}"
 cd $INSTALL_DIR/central-monitor
 python3 -m venv venv
 source venv/bin/activate
@@ -98,9 +109,9 @@ deactivate
 chown -R pandora:pandora venv
 
 # ========================================================================
-# 7. Install IDS Engine
+# 8. Install IDS Engine
 # ========================================================================
-echo -e "${GREEN}[7/9] Installing IDS Engine...${NC}"
+echo -e "${GREEN}[8/10] Installing IDS Engine...${NC}"
 cd $INSTALL_DIR/ids
 python3 -m venv venv
 source venv/bin/activate
@@ -109,9 +120,18 @@ deactivate
 chown -R pandora:pandora venv
 
 # ========================================================================
-# 8. Configure Nginx
+# 9. Build Frontend (Real User App)
 # ========================================================================
-echo -e "${GREEN}[8/9] Configuring Nginx...${NC}"
+echo -e "${GREEN}[9/10] Building Vue.js frontend...${NC}"
+cd $INSTALL_DIR/frontend
+npm install
+npm run build
+chown -R pandora:pandora dist
+
+# ========================================================================
+# 10. Configure Nginx
+# ========================================================================
+echo -e "${GREEN}[10/10] Configuring Nginx...${NC}"
 cp $INSTALL_DIR/central-monitor-server/nginx.conf $NGINX_CONF_DIR/nginx.conf
 
 echo -e "${YELLOW}[IMPORTANT] Edit nginx.conf to add your admin IP whitelist${NC}"
@@ -123,9 +143,37 @@ systemctl restart nginx
 systemctl enable nginx
 
 # ========================================================================
-# 9. Install Systemd Services
+# 11. Install Systemd Services
 # ========================================================================
-echo -e "${GREEN}[9/9] Installing systemd services...${NC}"
+echo -e "${GREEN}[11/11] Installing systemd services...${NC}"
+
+# Backend-user Service (Real User App)
+cat > $SYSTEMD_DIR/pandora-backend-user.service << 'EOF'
+[Unit]
+Description=Pandora Backend User API (Real User App)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=pandora
+Group=pandora
+WorkingDirectory=/opt/pandora/backend-user
+Environment="PYTHONPATH=/opt/pandora"
+Environment="DATABASE_URL=postgresql+psycopg://pandora:change_this_password@localhost/pandora_user"
+Environment="CENTRAL_MONITOR_URL=https://localhost/api/admin/honeypot/log"
+Environment="CENTRAL_MONITOR_API_KEY=change-this-api-key-in-production"
+
+ExecStart=/opt/pandora/backend-user/venv/bin/uvicorn api.main:app \
+    --host 127.0.0.1 \
+    --port 8001 \
+    --workers 2
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # Backend-admin Service
 cat > $SYSTEMD_DIR/pandora-backend-admin.service << 'EOF'
@@ -140,6 +188,7 @@ Group=pandora
 WorkingDirectory=/opt/pandora/backend-admin
 Environment="PYTHONPATH=/opt/pandora"
 Environment="DATABASE_URL=postgresql+psycopg://pandora:change_this_password@localhost/pandora_admin"
+Environment="CENTRAL_MONITOR_API_KEY=change-this-api-key-in-production"
 
 ExecStart=/opt/pandora/backend-admin/venv/bin/uvicorn api.main:app \
     --host 127.0.0.1 \
@@ -205,6 +254,7 @@ chown -R pandora:pandora /var/log/pandora
 systemctl daemon-reload
 
 # Enable services
+systemctl enable pandora-backend-user
 systemctl enable pandora-backend-admin
 systemctl enable pandora-central-monitor
 systemctl enable pandora-ids
@@ -215,14 +265,17 @@ echo -e "${GREEN}Central Monitor Deployment Complete!${NC}"
 echo "========================================"
 echo ""
 echo "Services installed:"
+echo "  • pandora-backend-user     - Real User API (Port 8001)"
 echo "  • pandora-backend-admin    - Admin API (Port 8002)"
 echo "  • pandora-central-monitor  - Dashboard (Port 5000)"
 echo "  • pandora-ids              - IDS Engine"
 echo "  • nginx                    - Reverse proxy (Port 443)"
 echo "  • postgresql               - Database"
 echo "  • redis                    - Cache"
+echo "  • Vue.js Frontend          - Real User App"
 echo ""
-echo -e "${YELLOW}IMPORTANT: Configure database password${NC}"
+echo -e "${YELLOW}IMPORTANT: Configure database passwords${NC}"
+echo "  sudo nano /etc/systemd/system/pandora-backend-user.service"
 echo "  sudo nano /etc/systemd/system/pandora-backend-admin.service"
 echo "  - Set correct DATABASE_URL with your password"
 echo ""
@@ -232,11 +285,16 @@ echo "  - Uncomment and set admin IPs"
 echo ""
 echo "Then start services:"
 echo "  sudo systemctl daemon-reload"
+echo "  sudo systemctl start pandora-backend-user"
 echo "  sudo systemctl start pandora-backend-admin"
 echo "  sudo systemctl start pandora-central-monitor"
 echo "  sudo systemctl start pandora-ids"
 echo ""
 echo "Check status:"
 echo "  sudo systemctl status pandora-*"
+echo ""
+echo -e "${GREEN}Central Monitor Server is ready!${NC}"
+echo "Real users can access: https://central-server-ip/"
+echo "Admin dashboard: https://central-server-ip/admin-dashboard/"
 echo ""
 

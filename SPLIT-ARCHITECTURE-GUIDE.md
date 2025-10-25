@@ -4,8 +4,8 @@
 
 Hệ thống Pandora được tách thành **2 servers riêng biệt**:
 
-1. **Honeypot Server** (Public) - Dụ hacker với fake + real app
-2. **Central Monitor Server** (Internal) - Admin dashboard, databases, IDS
+1. **Honeypot Server** (Public) - Pure honeypot, chỉ fake paths, không có real user app
+2. **Central Monitor Server** (Internal) - Real user app + Admin dashboard + databases + IDS
 
 ## Architecture
 
@@ -18,16 +18,17 @@ Hệ thống Pandora được tách thành **2 servers riêng biệt**:
         ┌──────────────────────────────┐
         │   HONEYPOT SERVER (Public)   │
         │   IP: X.X.X.X                │
+        │   Domain: honeypot.example.com│
         ├──────────────────────────────┤
         │ • Nginx (80/443)             │
-        │ • Honeypot Webserver (8443)  │
+        │ • Pure Honeypot (8443)       │
         │   - Fake paths (/admin, etc) │
-        │   - Real app (/app/*)        │
-        │ • Backend-user (8001)        │
+        │   - Fake APIs (/api/v1/*)    │
+        │   - NO real user app         │
         │                              │
         │ NO Database                  │
-        │ NO IDS                       │
-        │ Logs → Central Monitor       │
+        │ NO Real User Data            │
+        │ All logs → Central Monitor   │
         └──────────────┬───────────────┘
                        │
                        │ (Logs via API)
@@ -35,15 +36,18 @@ Hệ thống Pandora được tách thành **2 servers riêng biệt**:
         ┌──────────────────────────────┐
         │  CENTRAL MONITOR (Internal)  │
         │  IP: Y.Y.Y.Y                 │
+        │  Domain: app.example.com     │
         ├──────────────────────────────┤
         │ • Nginx (443)                │
-        │ • Central Monitor (5000)     │
+        │ • Vue.js Frontend (/)        │
+        │ • Backend-user (8001)        │
         │ • Backend-admin (8002)       │
+        │ • Central Monitor (5000)     │
         │ • PostgreSQL (all DBs)       │
         │ • IDS Engine                 │
         │ • Elasticsearch (optional)   │
         │                              │
-        │ Admin Access Only            │
+        │ Real User App + Admin        │
         └──────────────────────────────┘
 ```
 

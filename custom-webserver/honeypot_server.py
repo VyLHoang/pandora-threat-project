@@ -35,16 +35,7 @@ class Config:
     CENTRAL_MONITOR_URL = os.getenv("CENTRAL_MONITOR_URL", "https://central-monitor.local")
     CENTRAL_MONITOR_API_KEY = os.getenv("CENTRAL_MONITOR_API_KEY", "your-secret-key")
     
-    # Backend User API (local)
-    USER_BACKEND_URL = "http://127.0.0.1:8001"
-    
-    @staticmethod
-    def get_frontend_dir() -> Path:
-        base_dir = Path(__file__).parent.parent
-        dist_path = base_dir / "frontend" / "dist"
-        if dist_path.exists():
-            return dist_path
-        return Path.cwd()
+    # No backend user API on honeypot server (pure honeypot)
 
 config = Config()
 
@@ -57,12 +48,12 @@ async def lifespan(app: FastAPI):
     print("[HONEYPOT SERVER] Production Ready")
     print("="*70)
     print(f"[OK] Host: {config.HOST}:{config.PORT}")
-    print(f"[OK] Mode: Fake + Real hybrid")
+    print(f"[OK] Mode: Pure Honeypot")
     print(f"[OK] Central Monitor: {config.CENTRAL_MONITOR_URL}")
     print("="*70)
     print("[FEATURES]")
-    print("  Fake paths: /admin, /phpmyadmin, /wp-admin, /.env, etc")
-    print("  Real paths: /app/*, /api/user/*")
+    print("  Fake paths: /admin, /phpmyadmin, /wp-admin, /.env, /api/v1/*, etc")
+    print("  Pure honeypot: NO real user app")
     print("  All logs → Central Monitor")
     print("="*70)
     yield
@@ -110,16 +101,31 @@ async def log_to_central_monitor(
     """Send log to Central Monitor Server"""
     try:
         client_ip = get_client_ip(request)
+        
+        # Calculate suspicious score based on path and request
+        suspicious_score = calculate_suspicious_score(path, request, is_fake)
+        activity_type = detect_activity_type(path, request, is_fake)
+        
+        # Read request body for POST requests
+        request_body = None
+        if request.method in ["POST", "PUT", "PATCH"]:
+            try:
+                body_bytes = await request.body()
+                request_body = body_bytes.decode('utf-8')[:1000]  # Limit size
+            except:
+                request_body = None
+        
         log_data = {
             "client_ip": client_ip,
             "user_agent": request.headers.get("User-Agent", ""),
             "request_method": request.method,
             "request_path": path,
             "request_headers": dict(request.headers),
+            "request_body": request_body,
             "response_status": response_status,
             "is_fake_path": is_fake,
-            "suspicious_score": 80 if is_fake else 10,
-            "activity_type": "fake_probe" if is_fake else "legitimate_access",
+            "suspicious_score": suspicious_score,
+            "activity_type": activity_type,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -131,10 +137,81 @@ async def log_to_central_monitor(
                 timeout=5
             )
             
-        if is_fake:
-            print(f"[FAKE] {client_ip} → {path} (logged to Central)")
+        print(f"[HONEYPOT] {client_ip} → {path} (score: {suspicious_score}, type: {activity_type})")
     except Exception as e:
         print(f"[ERROR] Failed to log to Central Monitor: {e}")
+
+def calculate_suspicious_score(path: str, request: Request, is_fake: bool) -> int:
+    """Calculate suspicious score based on request characteristics"""
+    score = 0
+    path_lower = path.lower()
+    
+    # Base score for fake paths
+    if is_fake:
+        score += 50
+    
+    # High-risk paths
+    high_risk_paths = ['/admin', '/phpmyadmin', '/wp-admin', '/.env', '/config.php', '/.git', '/.htaccess']
+    for risk_path in high_risk_paths:
+        if risk_path in path_lower:
+            score += 30
+            break
+    
+    # API endpoints
+    if '/api/' in path_lower:
+        score += 20
+    
+    # File extensions
+    dangerous_extensions = ['.php', '.asp', '.jsp', '.sql', '.bak', '.backup']
+    for ext in dangerous_extensions:
+        if path_lower.endswith(ext):
+            score += 25
+            break
+    
+    # User agent analysis
+    user_agent = request.headers.get("User-Agent", "").lower()
+    suspicious_agents = ['sqlmap', 'nmap', 'nessus', 'nikto', 'burp', 'w3af', 'curl', 'wget']
+    for agent in suspicious_agents:
+        if agent in user_agent:
+            score += 40
+            break
+    
+    # Request method
+    if request.method == "POST" and is_fake:
+        score += 15
+    
+    # Ensure score is between 0-100
+    return min(100, max(0, score))
+
+def detect_activity_type(path: str, request: Request, is_fake: bool) -> str:
+    """Detect activity type based on request"""
+    path_lower = path.lower()
+    
+    if not is_fake:
+        return "legitimate_access"
+    
+    # Admin panel attempts
+    if any(admin_path in path_lower for admin_path in ['/admin', '/administrator', '/cpanel']):
+        return "admin_probe"
+    
+    # Database attempts
+    if any(db_path in path_lower for db_path in ['/phpmyadmin', '/pma', '/mysql', '/database']):
+        return "database_probe"
+    
+    # WordPress attempts
+    if any(wp_path in path_lower for wp_path in ['/wp-admin', '/wp-login', '/wp-content']):
+        return "wordpress_probe"
+    
+    # File access attempts
+    if any(file_path in path_lower for file_path in ['/.env', '/config.php', '/.htaccess', '/.git']):
+        return "file_access_probe"
+    
+    # API attempts
+    if '/api/' in path_lower:
+        return "api_probe"
+    
+    # Generic fake path
+    return "fake_probe"
 
 # ========================================================================
 # Middleware: Log All Requests
@@ -299,79 +376,157 @@ define('SECRET_KEY', 'fake_secret_key_12345');
 @app.get("/backup")
 @app.get("/backup.sql")
 @app.get("/database.sql")
+@app.get("/wp-content/uploads/")
+@app.get("/wp-includes/")
+@app.get("/wp-config.php")
+@app.get("/robots.txt")
+@app.get("/sitemap.xml")
+@app.get("/.git/")
+@app.get("/.svn/")
+@app.get("/.htaccess")
+@app.get("/web.config")
+@app.get("/crossdomain.xml")
+@app.get("/clientaccesspolicy.xml")
 async def fake_generic_paths(request: Request):
-    """Generic fake paths"""
+    """Generic fake paths - lure various attack vectors"""
     await log_to_central_monitor(request, request.url.path, 404, is_fake=True)
     return HTMLResponse("<h1>404 Not Found</h1><p>The requested resource was not found on this server.</p>", status_code=404)
 
+@app.get("/login.php")
+@app.get("/admin.php")
+@app.get("/index.php")
+@app.get("/test.php")
+async def fake_php_files(request: Request):
+    """Fake PHP files"""
+    await log_to_central_monitor(request, request.url.path, 200, is_fake=True)
+    return HTMLResponse("""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PHP Error</title>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 50px; }
+        .error { background: white; padding: 20px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <div class="error">
+        <h2>PHP Fatal Error</h2>
+        <p>Call to undefined function mysql_connect() in /var/www/html/index.php on line 15</p>
+        <p>Please check your database configuration.</p>
+    </div>
+</body>
+</html>
+    """)
+
+@app.get("/api/")
+@app.get("/api/v1/")
+@app.get("/api/v2/")
+async def fake_api_root(request: Request):
+    """Fake API root endpoints"""
+    await log_to_central_monitor(request, request.url.path, 200, is_fake=True)
+    return JSONResponse({
+        "version": "1.0.0",
+        "status": "active",
+        "endpoints": [
+            "/api/v1/auth/login",
+            "/api/v1/users",
+            "/api/v1/config",
+            "/api/v1/database"
+        ]
+    })
+
 # ========================================================================
-# REAL PATHS (Ẩn sau - Vue.js App)
+# ROOT PATH (Fake landing page)
 # ========================================================================
 
-frontend_dir = config.get_frontend_dir()
-
-# Mount static assets
-if (frontend_dir / "assets").exists():
-    app.mount("/app/assets", StaticFiles(directory=str(frontend_dir / "assets")), name="assets")
-
-@app.get("/app/{full_path:path}")
-async def serve_real_app(request: Request, full_path: str):
-    """Serve real Vue.js app (ẩn ở /app/*)"""
-    await log_to_central_monitor(request, f"/app/{full_path}", 200, is_fake=False)
-    
-    file_path = frontend_dir / full_path
-    if file_path.is_file():
-        return FileResponse(file_path)
-    
-    # SPA: serve index.html
-    index_path = frontend_dir / "index.html"
-    if index_path.exists():
-        return FileResponse(index_path)
-    else:
-        return HTMLResponse("<h1>Frontend not built</h1><p>Run: cd frontend && npm run build</p>", status_code=404)
-
-# Root redirect to /app/
 @app.get("/")
-async def root_redirect(request: Request):
-    """Redirect root to real app"""
-    await log_to_central_monitor(request, "/", 302, is_fake=False)
-    return HTMLResponse('<meta http-equiv="refresh" content="0; url=/app/">', status_code=302)
+async def fake_homepage(request: Request):
+    """Fake homepage - lure attackers"""
+    await log_to_central_monitor(request, "/", 200, is_fake=True)
+    
+    return HTMLResponse("""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to Our Server</title>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 50px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #ccc; }
+        h1 { color: #333; }
+        p { color: #666; line-height: 1.6; }
+        .links { margin: 20px 0; }
+        .links a { display: inline-block; margin: 10px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .links a:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our Server</h1>
+        <p>This is a production server running various services.</p>
+        <p>Please use the links below to access different areas:</p>
+        <div class="links">
+            <a href="/admin">Admin Panel</a>
+            <a href="/phpmyadmin">Database</a>
+            <a href="/wp-admin">WordPress</a>
+        </div>
+        <p style="font-size: 12px; color: #999;">Server v2.4.1 | Last updated: 2024-10-23</p>
+    </div>
+</body>
+</html>
+    """)
 
 # ========================================================================
-# API PROXY (to Backend-user)
+# FAKE API ENDPOINTS (Lure attackers)
 # ========================================================================
-@app.api_route("/api/user/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-async def proxy_to_backend(request: Request, path: str):
-    """Proxy API requests to Backend-user"""
-    await log_to_central_monitor(request, f"/api/user/{path}", 0, is_fake=False)
+
+@app.get("/api/v1/auth/login")
+@app.post("/api/v1/auth/login")
+async def fake_api_login(request: Request):
+    """Fake API login endpoint"""
+    await log_to_central_monitor(request, "/api/v1/auth/login", 200, is_fake=True)
     
-    try:
-        # Read body
-        body = None
-        if request.method in ["POST", "PUT", "PATCH"]:
-            body = await request.body()
-        
-        # Build backend URL
-        backend_url = f"{config.USER_BACKEND_URL}/api/v1/{path}"
-        
-        # Proxy request
-        async with httpx.AsyncClient() as client:
-            response = await client.request(
-                method=request.method,
-                url=backend_url,
-                headers=dict(request.headers),
-                content=body,
-                timeout=30
-            )
-            
-            return Response(
-                content=response.content,
-                status_code=response.status_code,
-                headers=dict(response.headers)
-            )
-    except Exception as e:
-        print(f"[ERROR] Proxy failed: {e}")
-        return JSONResponse({"error": "Backend unavailable"}, status_code=502)
+    return JSONResponse({
+        "success": True,
+        "message": "Login successful",
+        "token": "fake_jwt_token_12345",
+        "user": {
+            "id": 1,
+            "email": "admin@example.com",
+            "role": "admin"
+        }
+    })
+
+@app.get("/api/v1/users")
+async def fake_api_users(request: Request):
+    """Fake API users endpoint"""
+    await log_to_central_monitor(request, "/api/v1/users", 200, is_fake=True)
+    
+    return JSONResponse({
+        "users": [
+            {"id": 1, "email": "admin@example.com", "role": "admin"},
+            {"id": 2, "email": "user@example.com", "role": "user"}
+        ]
+    })
+
+@app.get("/api/v1/config")
+async def fake_api_config(request: Request):
+    """Fake API config endpoint"""
+    await log_to_central_monitor(request, "/api/v1/config", 200, is_fake=True)
+    
+    return JSONResponse({
+        "database": {
+            "host": "localhost",
+            "port": 3306,
+            "username": "root",
+            "password": "admin123"
+        },
+        "redis": {
+            "host": "localhost",
+            "port": 6379,
+            "password": "redis123"
+        }
+    })
 
 # ========================================================================
 # Health Check

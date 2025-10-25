@@ -13,47 +13,56 @@ Hệ thống được tách thành **2 servers riêng biệt**:
 ```
 ┌─────────────────────────────────┐
 │   HONEYPOT SERVER               │
+│   Domain: honeypot.example.com  │
 ├─────────────────────────────────┤
 │ Nginx (80/443 - SSL)            │
 │ ↓                               │
-│ Custom Webserver (8443)         │
+│ Pure Honeypot (8443)            │
 │  ├─ Fake Paths:                 │
 │  │   /admin, /phpmyadmin        │
 │  │   /wp-admin, /.env           │
-│  │   → Fake HTML responses      │
+│  │   /api/v1/* (fake APIs)      │
+│  │   → Fake HTML/JSON responses │
 │  │                              │
-│  └─ Real Paths (Hidden):        │
-│      /app/* → Vue.js SPA        │
-│      /api/user/* → Backend      │
+│  └─ NO Real User App            │
+│      (Pure honeypot only)       │
 │                                 │
-│ Backend-user (8001)             │
-│  - Authentication               │
-│  - VirusTotal Scan              │
-│  - Scan History                 │
-│                                 │
-│ NO Database (stateless)         │
+│ NO Database                     │
+│ NO Real User Data               │
 │ All logs → Central Monitor      │
 └─────────────────────────────────┘
 ```
 
-### 2. Central Monitor Server (Internal - Admin Only)
+### 2. Central Monitor Server (Internal - Real Users + Admin)
 
 ```
 ┌─────────────────────────────────┐
 │   CENTRAL MONITOR SERVER        │
+│   Domain: app.example.com       │
 ├─────────────────────────────────┤
 │ Nginx (443 - SSL, IP whitelist) │
 │ ↓                               │
-│ Central Monitor Dashboard       │
-│  - Real-time attack monitoring  │
-│  - Honeypot activity            │
-│  - User behavior analytics      │
-│  - Interactive maps             │
+│ Vue.js Frontend (/)             │
+│  - Real user app                │
+│  - VirusTotal scanning          │
+│  - User authentication          │
+│  - Scan history                 │
+│                                 │
+│ Backend-user (8001)             │
+│  - Real user authentication     │
+│  - VirusTotal API integration   │
+│  - User data management         │
 │                                 │
 │ Backend-admin (8002)            │
 │  - Receive logs from Honeypot   │
 │  - Attack logs management       │
 │  - User monitoring              │
+│                                 │
+│ Central Monitor Dashboard       │
+│  - Real-time attack monitoring  │
+│  - Honeypot activity            │
+│  - User behavior analytics      │
+│  - Interactive maps             │
 │                                 │
 │ PostgreSQL (All Databases)      │
 │  - pandora_user                 │
@@ -75,13 +84,14 @@ Hệ thống được tách thành **2 servers riêng biệt**:
 ## 🎯 Key Features
 
 ### Honeypot Server (Public)
-✅ **Fake Website** - Dụ hacker với nhiều fake paths  
-✅ **Real App Hidden** - Vue.js app ẩn ở `/app/*`  
+✅ **Pure Honeypot** - Chỉ fake paths, không có real user app  
+✅ **Fake APIs** - Fake JSON responses cho API endpoints  
 ✅ **Stateless** - Không lưu data, chỉ forward logs  
 ✅ **High Performance** - FastAPI + Gunicorn  
 ✅ **SSL/TLS** - Nginx xử lý encryption  
 
 ### Central Monitor Server (Internal)
+✅ **Real User App** - Vue.js frontend cho user thật  
 ✅ **All-in-One Monitoring** - Dashboard, APIs, Databases  
 ✅ **IDS Engine** - Network-level attack detection  
 ✅ **Real-time Analytics** - Live attack visualization  

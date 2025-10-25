@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     APP_ENV: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "change-this-secret-key-in-production"
+    SECRET_KEY: str = "930e0691447008266801710528828819"
     
     # Server
     HOST: str = "0.0.0.0"

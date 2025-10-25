@@ -52,15 +52,25 @@ class MonitoringService:
     def _send_sync(self, data: Dict) -> None:
         """Send log in background thread"""
         try:
+            # Add API key header
+            headers = {
+                'Content-Type': 'application/json',
+                'X-API-Key': settings.CENTRAL_MONITOR_API_KEY
+            }
+            
             response = requests.post(
                 self.central_url,
                 json=data,
-                timeout=1  # Short timeout
+                headers=headers,
+                timeout=5  # Longer timeout for reliability
             )
             if response.status_code == 200:
                 print(f"[MONITOR] Logged: {data.get('method')} {data.get('path')}")
-        except requests.exceptions.RequestException:
+            else:
+                print(f"[MONITOR] Failed to log: {response.status_code}")
+        except requests.exceptions.RequestException as e:
             # Central monitor might be down - that's ok
+            print(f"[MONITOR] Connection failed: {e}")
             pass
     
     def log_scan(self, scan_data: Dict) -> None:

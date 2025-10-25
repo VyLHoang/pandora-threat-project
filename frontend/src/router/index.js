@@ -43,7 +43,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/app/'),  // Real app hidden at /app/ path
+  history: createWebHistory('/'),  // Root path for Central Server
   routes
 })
 

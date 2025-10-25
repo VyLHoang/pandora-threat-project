@@ -61,9 +61,9 @@ else
 fi
 
 # ========================================================================
-# 4. Install Honeypot Webserver
+# 4. Install Honeypot Webserver (Pure Honeypot Only)
 # ========================================================================
-echo -e "${GREEN}[4/8] Installing Honeypot Webserver...${NC}"
+echo -e "${GREEN}[4/6] Installing Honeypot Webserver...${NC}"
 cd $INSTALL_DIR/custom-webserver
 python3 -m venv venv
 source venv/bin/activate
@@ -73,43 +73,23 @@ deactivate
 chown -R pandora:pandora venv
 
 # ========================================================================
-# 5. Install Backend-user
+# 5. Configure Nginx
 # ========================================================================
-echo -e "${GREEN}[5/8] Installing Backend-user...${NC}"
-cd $INSTALL_DIR/backend-user
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-deactivate
-chown -R pandora:pandora venv
-
-# ========================================================================
-# 6. Build Frontend
-# ========================================================================
-echo -e "${GREEN}[6/8] Building Vue.js frontend...${NC}"
-cd $INSTALL_DIR/frontend
-npm install
-npm run build
-chown -R pandora:pandora dist
-
-# ========================================================================
-# 7. Configure Nginx
-# ========================================================================
-echo -e "${GREEN}[7/8] Configuring Nginx...${NC}"
+echo -e "${GREEN}[5/6] Configuring Nginx...${NC}"
 cp $INSTALL_DIR/honeypot-server/nginx.conf $NGINX_CONF_DIR/nginx.conf
 nginx -t
 systemctl restart nginx
 systemctl enable nginx
 
 # ========================================================================
-# 8. Install Systemd Services
+# 6. Install Systemd Services
 # ========================================================================
-echo -e "${GREEN}[8/8] Installing systemd services...${NC}"
+echo -e "${GREEN}[6/6] Installing systemd services...${NC}"
 
-# Honeypot Webserver Service
+# Honeypot Webserver Service (Pure Honeypot)
 cat > $SYSTEMD_DIR/pandora-honeypot.service << 'EOF'
 [Unit]
-Description=Pandora Honeypot Webserver
+Description=Pandora Pure Honeypot Webserver
 After=network.target
 
 [Service]
@@ -135,33 +115,6 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-# Backend-user Service
-cat > $SYSTEMD_DIR/pandora-backend-user.service << 'EOF'
-[Unit]
-Description=Pandora Backend User API
-After=network.target
-
-[Service]
-Type=simple
-User=pandora
-Group=pandora
-WorkingDirectory=/opt/pandora/backend-user
-Environment="PYTHONPATH=/opt/pandora"
-Environment="CENTRAL_MONITOR_URL=https://your-central-server.com"
-Environment="CENTRAL_MONITOR_API_KEY=your-secret-api-key"
-
-ExecStart=/opt/pandora/backend-user/venv/bin/uvicorn api.main:app \
-    --host 127.0.0.1 \
-    --port 8001 \
-    --workers 2
-
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
 # Create log directory
 mkdir -p /var/log/pandora
 chown -R pandora:pandora /var/log/pandora
@@ -171,7 +124,6 @@ systemctl daemon-reload
 
 # Enable services
 systemctl enable pandora-honeypot
-systemctl enable pandora-backend-user
 
 echo ""
 echo "========================================"
@@ -179,22 +131,22 @@ echo -e "${GREEN}Honeypot Server Deployment Complete!${NC}"
 echo "========================================"
 echo ""
 echo "Services installed:"
-echo "  • pandora-honeypot    - Honeypot webserver (Port 8443)"
-echo "  • pandora-backend-user - User API (Port 8001)"
+echo "  • pandora-honeypot    - Pure honeypot webserver (Port 8443)"
 echo "  • nginx                - Reverse proxy (Port 80/443)"
 echo ""
 echo -e "${YELLOW}IMPORTANT: Edit environment variables${NC}"
 echo "  sudo nano /etc/systemd/system/pandora-honeypot.service"
-echo "  - Set CENTRAL_MONITOR_URL"
-echo "  - Set CENTRAL_MONITOR_API_KEY"
+echo "  - Set CENTRAL_MONITOR_URL to your Central Server IP"
+echo "  - Set CENTRAL_MONITOR_API_KEY to match Central Server"
 echo ""
 echo "Then start services:"
 echo "  sudo systemctl daemon-reload"
 echo "  sudo systemctl start pandora-honeypot"
-echo "  sudo systemctl start pandora-backend-user"
 echo ""
 echo "Check status:"
 echo "  sudo systemctl status pandora-honeypot"
-echo "  sudo systemctl status pandora-backend-user"
+echo ""
+echo -e "${GREEN}Honeypot Server is now ready to lure attackers!${NC}"
+echo "All traffic on ports 80/443 will be logged to Central Monitor."
 echo ""
 

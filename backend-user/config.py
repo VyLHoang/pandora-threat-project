@@ -62,7 +62,8 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@pandora.com"
     
     # Monitoring
-    CENTRAL_MONITOR_URL: str = "http://localhost:27009/api/logs"
+    CENTRAL_MONITOR_URL: str = "https://central-server-ip/api/admin/honeypot/log"
+    CENTRAL_MONITOR_API_KEY: str = "change-this-api-key-in-production"
     ENABLE_MONITORING: bool = True
     
     # Elasticsearch
