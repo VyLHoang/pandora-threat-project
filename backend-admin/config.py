@@ -19,19 +19,19 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "930e0691447008266801710528828819"
     
     # Server
-    HOST: str = "0.0.0.0"
-    PORT: int = 9000
+    HOST: str = "127.0.0.1"  # Localhost only (Nginx proxy)
+    PORT: int = 8002  # New port for Admin Backend
     
-    # Database (Admin DB - Port 5434)
-    DATABASE_URL: str = "postgresql+psycopg://pandora_admin:pandora_admin_pass_2024@localhost:5434/pandora_admin_db"
+    # Database (Admin DB - Same server)
+    DATABASE_URL: str = "postgresql+psycopg://pandora:change_this_password@localhost/pandora_admin"
     DB_ECHO: bool = False
     
-    # User Database (Read-only access for monitoring - Port 5433)
-    USER_DATABASE_URL: str = "postgresql+psycopg://pandora_user:pandora_user_pass_2024@localhost:5433/pandora_user_db"
+    # User Database (Read-only access for monitoring - Same server)
+    USER_DATABASE_URL: str = "postgresql+psycopg://pandora:change_this_password@localhost/pandora_user"
     
-    # Redis (Admin Redis - Port 6381)
+    # Redis (Same server)
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6381
+    REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: str = ""
     
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     ENTERPRISE_TIER_DAILY_LIMIT: int = 10000
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:27009"
+    CORS_ORIGINS: str = "http://localhost:5173,https://172.232.246.68"
     
     # GeoIP
     GEOIP_DB_PATH: str = os.path.join(os.path.dirname(__file__), "GeoLite2-City.mmdb")

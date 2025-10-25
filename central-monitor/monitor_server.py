@@ -137,10 +137,11 @@ def index():
         # Get total users from User DB via API
         total_users = 0
         try:
-            resp = requests.get('http://localhost:9000/api/v1/users/stats', timeout=2)
+            resp = requests.get('http://localhost:8002/api/v1/users/stats', timeout=2)
             if resp.status_code == 200:
                 total_users = resp.json().get('total_users', 0)
-        except:
+        except Exception as e:
+            print(f"[ERROR] Failed to get user stats: {e}")
             pass
         
         dashboard_stats = {
@@ -380,7 +381,7 @@ def get_stats():
 def proxy_users_api(subpath):
     """Proxy user monitoring API requests to Admin Backend"""
     try:
-        backend_url = f"http://localhost:9000/api/v1/users/{subpath}"
+        backend_url = f"http://localhost:8002/api/v1/users/{subpath}"
         args = request.args.to_dict()
         
         if request.method == 'GET':

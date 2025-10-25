@@ -27,6 +27,9 @@ class IDSEngine:
     """Intrusion Detection System Engine"""
     
     def __init__(self, interface=None, ports_to_monitor='all'):
+        # Auto-detect interface if not specified
+        if interface is None:
+            interface = self._detect_interface()
         self.interface = interface
         self.ports_to_monitor = ports_to_monitor
         
@@ -50,9 +53,9 @@ class IDSEngine:
             3389: 'RDP',
             21: 'FTP',
             25: 'SMTP',
-            9000: 'Backend',
-            5173: 'Frontend',
-            27009: 'Monitor'
+            8001: 'Backend-User',
+            8002: 'Backend-Admin',
+            5000: 'Central-Monitor'
         }
         
         # Thresholds (more sensitive)
@@ -66,6 +69,40 @@ class IDSEngine:
         self.cleanup_thread = threading.Thread(target=self._cleanup_old_data, daemon=True)
         self.cleanup_thread.start()
     
+    def _detect_interface(self):
+        """Auto-detect network interface"""
+        try:
+            import netifaces
+            # Find the first non-loopback interface with an IP
+            for interface in netifaces.interfaces():
+                if interface.startswith('lo'):
+                    continue
+                addrs = netifaces.ifaddresses(interface)
+                if netifaces.AF_INET in addrs:
+                    for addr in addrs[netifaces.AF_INET]:
+                        ip = addr['addr']
+                        if not ip.startswith('127.'):
+                            print(f"[IDS] Auto-detected interface: {interface} ({ip})")
+                            return interface
+        except ImportError:
+            pass
+        
+        # Fallback to common interface names
+        common_interfaces = ['eth0', 'ens33', 'enp0s3', 'wlan0']
+        for iface in common_interfaces:
+            try:
+                import subprocess
+                result = subprocess.run(['ip', 'addr', 'show', iface], 
+                                      capture_output=True, text=True)
+                if result.returncode == 0:
+                    print(f"[IDS] Using interface: {iface}")
+                    return iface
+            except:
+                continue
+        
+        print("[IDS] Warning: Could not detect interface, using default")
+        return None
+
     def _get_local_ips(self):
         """Get all local IP addresses of this machine"""
         import socket
